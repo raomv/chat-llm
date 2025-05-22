@@ -17,7 +17,27 @@ function App() {
   const [metrics, setMetrics] = useState<any>(null);
   const [isComparing, setIsComparing] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+  // Nuevo estado para el tema
+  const [darkMode, setDarkMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Cargar la preferencia de tema al iniciar
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('darkMode');
+    if (savedTheme) {
+      setDarkMode(savedTheme === 'true');
+    } else {
+      // Opcionalmente, detectar preferencia del sistema
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setDarkMode(prefersDark);
+    }
+  }, []);
+
+  // Aplicar el tema cuando cambia
+  useEffect(() => {
+    document.body.classList.toggle('dark-theme', darkMode);
+    localStorage.setItem('darkMode', darkMode.toString());
+  }, [darkMode]);
 
   // Cargar la lista de modelos al iniciar
   useEffect(() => {
@@ -152,17 +172,29 @@ function App() {
     );
   };
 
+  // Función para cambiar el tema
+  const toggleTheme = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
-    <div className="app-container">
+    <div className={`app-container ${darkMode ? 'dark-theme' : ''}`}>
       <div className="chat-container">
         <header className="chat-header">
-          <h1>Chat con IA</h1>
-          <div className="model-selector-toggle">
+          <h1>EstrategIA-v1</h1>
+          <div className="header-controls">
+            <button 
+              onClick={toggleTheme} 
+              className="theme-toggle"
+              title={darkMode ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+            >
+              {darkMode ? "☀️" : "🌙"}
+            </button>
             <button 
               onClick={() => setShowComparison(!showComparison)} 
               className="toggle-button"
             >
-              {showComparison ? "Ver Chat Normal" : "Comparar Modelos"}
+              {showComparison ? "Chat RAG" : "Comparar Modelos"}
             </button>
           </div>
         </header>
@@ -173,7 +205,7 @@ function App() {
             <div className="messages-container">
               {messages.length === 0 ? (
                 <div className="empty-state">
-                  <p>👋 Haz una pregunta para comenzar la conversación</p>
+                  <p>Ask a question to start a chat</p>
                 </div>
               ) : (
                 messages.map((msg, index) => (
@@ -244,7 +276,7 @@ function App() {
                 onClick={compareModels} 
                 disabled={!input.trim() || isComparing || selectedModels.length === 0}
               >
-                {isComparing ? "Comparando..." : "Comparar Modelos"}
+                {isComparing ? "Consultando..." : "Obtener métricas"}
               </button>
             </div>
             
