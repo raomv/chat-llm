@@ -23,6 +23,9 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [collections, setCollections] = useState<string[]>([]);
   const [currentCollection, setCurrentCollection] = useState('');
+  const [selectedChatModel, setSelectedChatModel] = useState('');
+  const [showModelChangeConfirm, setShowModelChangeConfirm] = useState(false);
+  const [pendingModel, setPendingModel] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Cargar la preferencia de tema al iniciar
@@ -55,20 +58,20 @@ function App() {
           setModels(response.data.models);
           console.log("Modelos cargados:", response.data.models);
           
-          // Preseleccionar el modelo por defecto
+          // Preseleccionar el modelo por defecto para chat y comparación
           if (response.data.default_model) {
             setSelectedModels([response.data.default_model]);
+            setSelectedChatModel(response.data.default_model);
           } else if (response.data.models.length > 0) {
             setSelectedModels([response.data.models[0]]);
+            setSelectedChatModel(response.data.models[0]);
           }
         } else {
           console.error('Formato de respuesta inválido:', response.data);
-          // Añadir un valor predeterminado para que se muestre algo
           setModels(["No se pudieron cargar los modelos"]);
         }
       } catch (error) {
         console.error('Error al cargar modelos:', error);
-        // Agregar un valor por defecto para que se muestre algo
         setModels(["Error de conexión"]);
       } finally {
         setIsLoadingModels(false);
@@ -110,9 +113,11 @@ function App() {
     setIsLoading(true);
     
     try {
-      // Enviar solicitud al backend FastAPI
+      // Enviar solicitud al backend FastAPI con el modelo y colección seleccionados
       const response = await axios.post(`${API_URL}/chat`, {
-        message: userMessage
+        message: userMessage,
+        model: selectedChatModel,
+        collection: currentCollection
       });
       
       // Añadir respuesta de la IA
@@ -196,6 +201,45 @@ function App() {
     setDarkMode(!darkMode);
   };
 
+  // Nueva función para manejar cambio de modelo en chat
+  const handleChatModelChange = (newModel: string) => {
+    if (messages.length > 0) {
+      setPendingModel(newModel);
+      setShowModelChangeConfirm(true);
+    } else {
+      setSelectedChatModel(newModel);
+    }
+  };
+
+  // Nueva función para manejar cambio de colección
+  const handleCollectionChange = (newCollection: string) => {
+    if (messages.length > 0) {
+      // Mostrar confirmación también para cambio de colección
+      setPendingModel(newCollection);
+      setShowModelChangeConfirm(true);
+    } else {
+      setCurrentCollection(newCollection);
+    }
+  };
+
+  const confirmModelChange = () => {
+    if (pendingModel.includes('llama') || pendingModel.includes('phi') || pendingModel.includes('mistral')) {
+      // Es un modelo
+      setSelectedChatModel(pendingModel);
+    } else {
+      // Es una colección
+      setCurrentCollection(pendingModel);
+    }
+    setMessages([]);
+    setShowModelChangeConfirm(false);
+    setPendingModel('');
+  };
+
+  const cancelModelChange = () => {
+    setShowModelChangeConfirm(false);
+    setPendingModel('');
+  };
+
   return (
     <div className={`app-container ${darkMode ? 'dark-theme' : ''}`}>
       <div className="sidebar">
@@ -222,11 +266,29 @@ function App() {
         </div>
 
         <div className="sidebar-section">
+          <h3>Modelo de Chat</h3>
+          <div className="model-selector">
+            <select
+              value={selectedChatModel}
+              onChange={(e) => handleChatModelChange(e.target.value)}
+              disabled={isLoadingModels}
+            >
+              <option value="">Seleccionar modelo</option>
+              {models.map(model => (
+                <option key={model} value={model}>
+                  {model}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="sidebar-section">
           <h3>Colección Activa</h3>
           <div className="collection-selector">
             <select 
               value={currentCollection}
-              onChange={(e) => setCurrentCollection(e.target.value)}
+              onChange={(e) => handleCollectionChange(e.target.value)}
             >
               <option value="">Seleccionar colección</option>
               {collections.map(collection => (
@@ -387,6 +449,31 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Modal de confirmación para cambio de modelo o colección */}
+      {showModelChangeConfirm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>
+              {pendingModel.includes('llama') || pendingModel.includes('phi') || pendingModel.includes('mistral') 
+                ? 'Cambiar modelo de chat' 
+                : 'Cambiar colección activa'}
+            </h3>
+            <p>
+              Al hacer este cambio se borrará la conversación actual. 
+              ¿Deseas continuar?
+            </p>
+            <div className="modal-buttons">
+              <button onClick={cancelModelChange} className="cancel-button">
+                Cancelar
+              </button>
+              <button onClick={confirmModelChange} className="confirm-button">
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

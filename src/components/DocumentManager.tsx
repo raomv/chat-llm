@@ -1,5 +1,5 @@
 // Componente DocumentManager.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8000';
@@ -10,6 +10,22 @@ function DocumentManager() {
   const [chunkSize, setChunkSize] = useState(1024);
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState('');
+  const [selectedCollection, setSelectedCollection] = useState('');
+  const [collections, setCollections] = useState<string[]>([]);
+
+  // Cargar colecciones disponibles al montar el componente
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/collections`);
+        setCollections(response.data.collections);
+      } catch (error) {
+        console.error('Error al cargar colecciones:', error);
+      }
+    };
+    
+    fetchCollections();
+  }, []);
 
   // Crear nueva colección
   const handleCreateCollection = async () => {
@@ -22,6 +38,10 @@ function DocumentManager() {
       
       setMessage(response.data.message);
       setNewCollectionName('');
+      
+      // Recargar la lista de colecciones
+      const collectionsResponse = await axios.get(`${API_URL}/api/collections`);
+      setCollections(collectionsResponse.data.collections);
     } catch (error) {
       console.error('Error al crear colección:', error);
       setMessage(`Error: ${error.response?.data?.detail || 'No se pudo crear la colección'}`);
@@ -30,7 +50,7 @@ function DocumentManager() {
 
   // Procesar documentos
   const handleProcessDocuments = async () => {
-    if (!directory.trim()) return;
+    if (!directory.trim() || !selectedCollection) return;
     
     setIsProcessing(true);
     setMessage('Procesando documentos...');
@@ -38,7 +58,8 @@ function DocumentManager() {
     try {
       const response = await axios.post(`${API_URL}/api/documents/process`, {
         directory: directory,
-        chunk_size: chunkSize
+        chunk_size: chunkSize,
+        collection: selectedCollection
       });
       
       setMessage(`Procesamiento iniciado: ${response.data.message}`);
@@ -78,6 +99,21 @@ function DocumentManager() {
             />
           </div>
           
+          <div className="form-group">
+            <label>Colección destino:</label>
+            <select
+              value={selectedCollection}
+              onChange={(e) => setSelectedCollection(e.target.value)}
+            >
+              <option value="">Seleccionar colección</option>
+              {collections.map(collection => (
+                <option key={collection} value={collection}>
+                  {collection}
+                </option>
+              ))}
+            </select>
+          </div>
+          
           <div className="new-collection">
             <input
               type="text"
@@ -92,7 +128,7 @@ function DocumentManager() {
           
           <button 
             onClick={handleProcessDocuments}
-            disabled={isProcessing || !directory}
+            disabled={isProcessing || !directory || !selectedCollection}
           >
             {isProcessing ? 'Procesando...' : 'Procesar Documentos'}
           </button>
