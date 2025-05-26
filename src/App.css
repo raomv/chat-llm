@@ -48,18 +48,93 @@ body {
 
 .app-container {
   display: flex;
-  flex-direction: column;
   height: 100vh;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+}
+
+.sidebar {
+  width: 280px;
+  background-color: var(--card-bg);
+  border-right: 1px solid var(--header-border);
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--header-border);
+}
+
+.sidebar-section:last-child {
+  border-bottom: none;
+}
+
+.sidebar-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mode-button {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.mode-button:hover {
+  background-color: #2a75e8;
+  transform: translateY(-1px);
+}
+
+.mode-button.active {
+  background-color: #1e6bdb;
+  box-shadow: 0 2px 8px rgba(58, 134, 255, 0.3);
+}
+
+.collection-selector {
+  width: 100%;
+}
+
+.collection-selector select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  background-color: var(--chat-bg);
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  box-shadow: none;
   background-color: var(--chat-bg);
   transition: all 0.3s ease;
 }
@@ -412,12 +487,29 @@ body {
   background-color: #3367d6;
 }
 
-@media (max-width: 600px) {
-  .message-content {
-    max-width: 90%;
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
   }
   
-  .chat-container {
-    padding: 0.5rem;
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--header-border);
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px;
+  }
+  
+  .sidebar-section {
+    min-width: 200px;
+    border-bottom: none;
+    border-right: 1px solid var(--header-border);
+    padding: 8px 16px;
+  }
+  
+  .sidebar-section:last-child {
+    border-right: none;
   }
 }

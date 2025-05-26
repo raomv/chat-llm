@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ChatMessage from './components/ChatMessage';
+import DocumentManager from './components/DocumentManager';
 import './App.css';
 
 // URL del backend - Ajusta según tu configuración
@@ -17,8 +18,11 @@ function App() {
   const [metrics, setMetrics] = useState<any>(null);
   const [isComparing, setIsComparing] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+  const [showDocumentManager, setShowDocumentManager] = useState(false);
   // Nuevo estado para el tema
   const [darkMode, setDarkMode] = useState(false);
+  const [collections, setCollections] = useState<string[]>([]);
+  const [currentCollection, setCurrentCollection] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Cargar la preferencia de tema al iniciar
@@ -72,6 +76,21 @@ function App() {
     };
 
     fetchModels();
+  }, []);
+
+  // Cargar colecciones disponibles
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/collections`);
+        setCollections(response.data.collections);
+        setCurrentCollection(response.data.current);
+      } catch (error) {
+        console.error('Error al cargar colecciones:', error);
+      }
+    };
+    
+    fetchCollections();
   }, []);
 
   // Scroll al fondo cuando cambian los mensajes
@@ -179,142 +198,194 @@ function App() {
 
   return (
     <div className={`app-container ${darkMode ? 'dark-theme' : ''}`}>
-      <div className="chat-container">
-        <header className="chat-header">
-          <h1>EstrategIA-v1</h1>
-          <div className="header-controls">
-            <button 
-              onClick={toggleTheme} 
-              className="theme-toggle"
-              title={darkMode ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+      <div className="sidebar">
+        <div className="sidebar-section">
+          <h3>Modo de Chat</h3>
+          <button 
+            onClick={() => {
+              setShowComparison(false);
+              setShowDocumentManager(false);
+            }}
+            className={`mode-button ${!showComparison && !showDocumentManager ? 'active' : ''}`}
+          >
+            Chat RAG
+          </button>
+          <button 
+            onClick={() => {
+              setShowComparison(true);
+              setShowDocumentManager(false);
+            }}
+            className={`mode-button ${showComparison ? 'active' : ''}`}
+          >
+            Comparar Modelos
+          </button>
+        </div>
+
+        <div className="sidebar-section">
+          <h3>Colección Activa</h3>
+          <div className="collection-selector">
+            <select 
+              value={currentCollection}
+              onChange={(e) => setCurrentCollection(e.target.value)}
             >
-              {darkMode ? "☀️" : "🌙"}
-            </button>
-            <button 
-              onClick={() => setShowComparison(!showComparison)} 
-              className="toggle-button"
-            >
-              {showComparison ? "Chat RAG" : "Comparar Modelos"}
-            </button>
+              <option value="">Seleccionar colección</option>
+              {collections.map(collection => (
+                <option key={collection} value={collection}>
+                  {collection}
+                </option>
+              ))}
+            </select>
           </div>
-        </header>
-        
-        {!showComparison ? (
-          // Vista normal del chat
-          <>
-            <div className="messages-container">
-              {messages.length === 0 ? (
-                <div className="empty-state">
-                  <p>Ask a question to start a chat</p>
-                </div>
-              ) : (
-                messages.map((msg, index) => (
-                  <ChatMessage 
-                    key={index} 
-                    message={msg.text} 
-                    isUser={msg.isUser} 
-                  />
-                ))
-              )}
-              {isLoading && (
-                <div className="loading-indicator">
-                  <div className="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-            
-            <form className="input-form" onSubmit={handleSubmit}>
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Escribe tu mensaje aquí..."
-                disabled={isLoading}
-              />
-              <button type="submit" disabled={!input.trim() || isLoading}>
-                Enviar
+        </div>
+
+        <div className="sidebar-section">
+          <h3>Gestión</h3>
+          <button 
+            onClick={() => {
+              setShowComparison(false);
+              setShowDocumentManager(!showDocumentManager);
+            }}
+            className={`mode-button ${showDocumentManager ? 'active' : ''}`}
+          >
+            Gestión de Documentos
+          </button>
+        </div>
+      </div>
+
+      <div className="main-content">
+        <div className="chat-container">
+          <header className="chat-header">
+            <h1>EstrategIA-v1</h1>
+            <div className="header-controls">
+              <button 
+                onClick={toggleTheme} 
+                className="theme-toggle"
+                title={darkMode ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+              >
+                {darkMode ? "☀️" : "🌙"}
               </button>
-            </form>
-          </>
-        ) : (
-          // Vista de comparación de modelos
-          <div className="comparison-container">
-            <div className="model-selection">
-              <h3>Selecciona los modelos a comparar:</h3>
-              <div className="model-checkboxes">
-                {isLoadingModels ? (
-                  <p>Cargando modelos...</p>
+            </div>
+          </header>
+          
+          {showDocumentManager ? (
+            <DocumentManager />
+          ) : !showComparison ? (
+            // Vista normal del chat
+            <>
+              <div className="messages-container">
+                {messages.length === 0 ? (
+                  <div className="empty-state">
+                    <p>Ask a question to start a chat</p>
+                  </div>
                 ) : (
-                  models.map(model => (
-                    <label key={model} className="model-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={selectedModels.includes(model)}
-                        onChange={() => handleModelSelection(model)}
-                      />
-                      {model}
-                    </label>
+                  messages.map((msg, index) => (
+                    <ChatMessage 
+                      key={index} 
+                      message={msg.text} 
+                      isUser={msg.isUser} 
+                    />
                   ))
                 )}
-              </div>
-            </div>
-            
-            <div className="comparison-input">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Escribe una pregunta para comparar modelos..."
-                disabled={isComparing}
-              />
-              <button 
-                onClick={compareModels} 
-                disabled={!input.trim() || isComparing || selectedModels.length === 0}
-              >
-                {isComparing ? "Consultando..." : "Obtener métricas"}
-              </button>
-            </div>
-            
-            {comparisonResults && !isComparing && (
-              <div className="results-grid">
-                {Object.keys(comparisonResults).map(model => (
-                  <div key={model} className="model-result-card">
-                    <h3 className="model-name">{model}</h3>
-                    
-                    {metrics && metrics[model] && !metrics[model].error && (
-                      <div className="metrics-container">
-                        <h4>Métricas de Evaluación:</h4>
-                        {renderMetricBar(metrics[model].faithfulness, "Fidelidad")}
-                        {renderMetricBar(metrics[model].answer_relevancy, "Relevancia")}
-                        {renderMetricBar(metrics[model].context_relevancy, "Precisión")}
-                        {renderMetricBar(metrics[model].overall_score, "Puntuación global")}
-                      </div>
-                    )}
-                    
-                    <div className="model-answer">
-                      <h4>Respuesta:</h4>
-                      <div className="answer-text">
-                        {comparisonResults[model]}
-                      </div>
+                {isLoading && (
+                  <div className="loading-indicator">
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
                     </div>
                   </div>
-                ))}
+                )}
+                <div ref={messagesEndRef} />
               </div>
-            )}
-            
-            {isComparing && (
-              <div className="comparison-loading">
-                <div className="loading-spinner"></div>
-                <p>Comparando modelos, por favor espera...</p>
+              
+              <form className="input-form" onSubmit={handleSubmit}>
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Escribe tu mensaje aquí..."
+                  disabled={isLoading}
+                />
+                <button type="submit" disabled={!input.trim() || isLoading}>
+                  Enviar
+                </button>
+              </form>
+            </>
+          ) : (
+            // Vista de comparación de modelos
+            <div className="comparison-container">
+              <div className="model-selection">
+                <h3>Selecciona los modelos a comparar:</h3>
+                <div className="model-checkboxes">
+                  {isLoadingModels ? (
+                    <p>Cargando modelos...</p>
+                  ) : (
+                    models.map(model => (
+                      <label key={model} className="model-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={selectedModels.includes(model)}
+                          onChange={() => handleModelSelection(model)}
+                        />
+                        {model}
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        )}
+              
+              <div className="comparison-input">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Escribe una pregunta para comparar modelos..."
+                  disabled={isComparing}
+                />
+                <button 
+                  onClick={compareModels} 
+                  disabled={!input.trim() || isComparing || selectedModels.length === 0}
+                >
+                  {isComparing ? "Consultando..." : "Obtener métricas"}
+                </button>
+              </div>
+              
+              {comparisonResults && !isComparing && (
+                <div className="results-grid">
+                  {Object.keys(comparisonResults).map(model => (
+                    <div key={model} className="model-result-card">
+                      <h3 className="model-name">{model}</h3>
+                      
+                      {metrics && metrics[model] && !metrics[model].error && (
+                        <div className="metrics-container">
+                          <h4>Métricas de Evaluación:</h4>
+                          {renderMetricBar(metrics[model].faithfulness, "Fidelidad")}
+                          {renderMetricBar(metrics[model].answer_relevancy, "Relevancia")}
+                          {renderMetricBar(metrics[model].context_relevancy, "Precisión")}
+                          {renderMetricBar(metrics[model].overall_score, "Puntuación global")}
+                        </div>
+                      )}
+                      
+                      <div className="model-answer">
+                        <h4>Respuesta:</h4>
+                        <div className="answer-text">
+                          {comparisonResults[model]}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {isComparing && (
+                <div className="comparison-loading">
+                  <div className="loading-spinner"></div>
+                  <p>Comparando modelos, por favor espera...</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
