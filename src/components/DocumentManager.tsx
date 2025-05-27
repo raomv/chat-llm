@@ -105,7 +105,7 @@ function DocumentManager() {
               value={selectedCollection}
               onChange={(e) => setSelectedCollection(e.target.value)}
             >
-              <option value="">Seleccionar colección</option>
+              <option value="" disabled>Seleccionar colección</option>
               {collections.map(collection => (
                 <option key={collection} value={collection}>
                   {collection}

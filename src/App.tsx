@@ -273,7 +273,9 @@ function App() {
               onChange={(e) => handleChatModelChange(e.target.value)}
               disabled={isLoadingModels}
             >
-              <option value="">Seleccionar modelo</option>
+              <option value="" disabled>
+                {isLoadingModels ? 'Cargando modelos...' : 'Seleccionar modelo'}
+              </option>
               {models.map(model => (
                 <option key={model} value={model}>
                   {model}
@@ -290,7 +292,7 @@ function App() {
               value={currentCollection}
               onChange={(e) => handleCollectionChange(e.target.value)}
             >
-              <option value="">Seleccionar colección</option>
+              <option value="" disabled>Seleccionar colección</option>
               {collections.map(collection => (
                 <option key={collection} value={collection}>
                   {collection}
@@ -369,7 +371,7 @@ function App() {
                   disabled={isLoading}
                 />
                 <button type="submit" disabled={!input.trim() || isLoading}>
-                  Enviar
+                  {isLoading ? 'Enviando...' : 'Enviar'}
                 </button>
               </form>
             </>
