@@ -904,3 +904,66 @@ body {
     border-right: none;
   }
 }
+
+/* Estilos para el contenido de pensamiento */
+.thinking-section {
+  margin-top: 12px;
+  border-top: 1px solid var(--input-border);
+  padding-top: 8px;
+}
+
+.thinking-toggle {
+  background: none;
+  border: 1px solid var(--input-border);
+  color: var(--text-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.thinking-toggle:hover {
+  background-color: var(--model-checkbox-hover);
+  border-color: var(--primary-color);
+}
+
+.thinking-content {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: var(--answer-bg);
+  border-left: 3px solid var(--primary-color);
+  border-radius: 4px;
+  font-style: italic;
+  opacity: 0.8;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  animation: expandIn 0.3s ease;
+}
+
+.dark-theme .thinking-content {
+  background-color: var(--model-checkbox-bg);
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 0.8;
+    max-height: 500px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+.main-response {
+  line-height: 1.5;
+}

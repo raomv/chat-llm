@@ -113,19 +113,45 @@ function App() {
     setIsLoading(true);
     
     try {
-      // Enviar solicitud al backend FastAPI con el modelo y colección seleccionados
-      const response = await axios.post(`${API_URL}/chat`, {
+      console.log("Enviando consulta...", {
         message: userMessage,
         model: selectedChatModel,
         collection: currentCollection
       });
       
+      // Enviar solicitud al backend FastAPI con el modelo y colección seleccionados
+      const response = await axios.post(`${API_URL}/chat`, {
+        message: userMessage,
+        model: selectedChatModel,
+        collection: currentCollection
+      }, {
+        timeout: 120000 // 2 minutos de timeout
+      });
+      
+      console.log("Respuesta recibida:", response.data);
+      
       // Añadir respuesta de la IA
       setMessages(prev => [...prev, { text: response.data.response, isUser: false }]);
-    } catch (error) {
-      console.error('Error al enviar mensaje:', error);
+    } catch (error: any) {
+      console.error('Error completo:', error);
+      console.error('Error response:', error.response);
+      console.error('Error request:', error.request);
+      console.error('Error message:', error.message);
+      
+      let errorMessage = "Ha ocurrido un error inesperado.";
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = "La consulta tardó demasiado tiempo. Intenta con una pregunta más simple.";
+      } else if (error.response) {
+        errorMessage = `Error del servidor: ${error.response.status} - ${error.response.data?.detail || 'Error desconocido'}`;
+      } else if (error.request) {
+        errorMessage = "No se pudo conectar con el servidor. Verifica que el backend esté funcionando.";
+      } else {
+        errorMessage = `Error de configuración: ${error.message}`;
+      }
+      
       setMessages(prev => [...prev, { 
-        text: "Lo siento, ha ocurrido un error al conectar con el servidor. Inténtalo de nuevo más tarde.", 
+        text: errorMessage, 
         isUser: false 
       }]);
     } finally {
