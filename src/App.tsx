@@ -202,8 +202,11 @@ function App() {
     });
   };
 
-  const renderMetricBar = (value: number | null, label: string) => {
-    if (value === null) return <div>Métrica no disponible</div>;
+  const renderMetricBar = (value: number | null | undefined, label: string) => {
+    // Si no hay valor o RAGAS no está disponible, no mostrar la métrica
+    if (value === null || value === undefined) {
+      return null; // No renderizar nada
+    }
     
     return (
       <div className="metric">
@@ -448,11 +451,21 @@ function App() {
                       
                       {metrics && metrics[model] && !metrics[model].error && (
                         <div className="metrics-container">
-                          <h4>Métricas de Evaluación:</h4>
+                          <h4>Métricas de Evaluación RAGAS:</h4>
                           {renderMetricBar(metrics[model].faithfulness, "Fidelidad")}
                           {renderMetricBar(metrics[model].answer_relevancy, "Relevancia")}
                           {renderMetricBar(metrics[model].context_relevancy, "Precisión")}
                           {renderMetricBar(metrics[model].overall_score, "Puntuación global")}
+                          
+                          {/* Mostrar mensaje si no hay métricas */}
+                          {!metrics[model].faithfulness && !metrics[model].answer_relevancy && !metrics[model].context_relevancy && (
+                            <div className="no-metrics-message">
+                              <p>📊 Métricas RAGAS no disponibles para este modelo</p>
+                              <p style={{fontSize: '12px', opacity: '0.7'}}>
+                                {!RAGAS_AVAILABLE ? 'RAGAS no está instalado' : 'Error en el cálculo de métricas'}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                       

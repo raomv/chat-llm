@@ -967,3 +967,51 @@ body {
 .main-response {
   line-height: 1.5;
 }
+
+/* Estilos adicionales para upload */
+.mode-selector {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.mode-selector label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.selected-files {
+  margin-top: 8px;
+  padding: 12px;
+  background-color: var(--card-bg);
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  font-size: 14px;
+}
+
+.selected-files ul {
+  margin: 8px 0 0 0;
+  padding-left: 16px;
+}
+
+.selected-files li {
+  font-size: 14px;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+input[type="file"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed var(--input-border);
+  border-radius: 6px;
+  background-color: var(--chat-bg);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+input[type="file"]:hover {
+  border-color: var(--primary-color);
+}

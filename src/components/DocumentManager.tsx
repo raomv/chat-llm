@@ -12,6 +12,10 @@ function DocumentManager() {
   const [message, setMessage] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('');
   const [collections, setCollections] = useState<string[]>([]);
+  
+  // Nuevos estados para upload
+  const [uploadMode, setUploadMode] = useState<'directory' | 'upload'>('upload');
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
 
   // Cargar colecciones disponibles al montar el componente
   useEffect(() => {
@@ -48,7 +52,7 @@ function DocumentManager() {
     }
   };
 
-  // Procesar documentos
+  // Procesar documentos desde directorio
   const handleProcessDocuments = async () => {
     if (!directory.trim() || !selectedCollection) return;
     
@@ -71,22 +75,119 @@ function DocumentManager() {
     }
   };
 
+  // Subir y procesar archivos
+  const handleUploadDocuments = async () => {
+    if (!selectedFiles || selectedFiles.length === 0 || !selectedCollection) return;
+    
+    setIsProcessing(true);
+    setMessage('Subiendo archivos y procesando con docling...');
+    
+    try {
+      const formData = new FormData();
+      
+      // Añadir archivos
+      for (let i = 0; i < selectedFiles.length; i++) {
+        formData.append('files', selectedFiles[i]);
+      }
+      
+      // Añadir parámetros
+      formData.append('collection', selectedCollection);
+      formData.append('chunk_size', chunkSize.toString());
+      
+      const response = await axios.post(`${API_URL}/api/documents/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 300000 // 5 minutos
+      });
+      
+      setMessage(`✅ ${response.data.message}`);
+      setSelectedFiles(null);
+      
+      // Limpiar input
+      const fileInput = document.getElementById('file-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      
+    } catch (error) {
+      console.error('Error al subir archivos:', error);
+      let errorMessage = 'Error desconocido';
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'El procesamiento tardó demasiado tiempo. Archivos muy grandes pueden tardar varios minutos.';
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      }
+      
+      setMessage(`❌ Error: ${errorMessage}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="document-manager">
       <h2>Gestión de Documentos</h2>
       
       <div className="section">
+        <h3>Modo de Procesamiento</h3>
+        <div className="mode-selector">
+          <label>
+            <input
+              type="radio"
+              value="upload"
+              checked={uploadMode === 'upload'}
+              onChange={(e) => setUploadMode(e.target.value as 'directory' | 'upload')}
+            />
+            Subir Archivos
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="directory"
+              checked={uploadMode === 'directory'}
+              onChange={(e) => setUploadMode(e.target.value as 'directory' | 'upload')}
+            />
+            Usar Directorio
+          </label>
+        </div>
+      </div>
+      
+      <div className="section">
         <h3>Procesar Documentos</h3>
         <div className="process-form">
-          <div className="form-group">
-            <label>Directorio de documentos:</label>
-            <input
-              type="text"
-              value={directory}
-              onChange={(e) => setDirectory(e.target.value)}
-              placeholder="/ruta/a/documentos"
-            />
-          </div>
+          
+          {uploadMode === 'upload' ? (
+            <div className="form-group">
+              <label>Seleccionar archivos:</label>
+              <input
+                id="file-input"
+                type="file"
+                multiple
+                accept=".pdf,.txt,.docx,.md"
+                onChange={(e) => setSelectedFiles(e.target.files)}
+              />
+              {selectedFiles && (
+                <div className="selected-files">
+                  <p>Archivos seleccionados: {selectedFiles.length}</p>
+                  <ul>
+                    {Array.from(selectedFiles).map((file, index) => (
+                      <li key={index}>{file.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="form-group">
+              <label>Directorio de documentos:</label>
+              <input
+                type="text"
+                value={directory}
+                onChange={(e) => setDirectory(e.target.value)}
+                placeholder="/ruta/a/documentos"
+              />
+            </div>
+          )}
           
           <div className="form-group">
             <label>Tamaño de fragmento:</label>
@@ -127,10 +228,15 @@ function DocumentManager() {
           </div>
           
           <button 
-            onClick={handleProcessDocuments}
-            disabled={isProcessing || !directory || !selectedCollection}
+            onClick={uploadMode === 'upload' ? handleUploadDocuments : handleProcessDocuments}
+            disabled={
+              isProcessing || 
+              !selectedCollection || 
+              (uploadMode === 'upload' ? !selectedFiles || selectedFiles.length === 0 : !directory)
+            }
           >
-            {isProcessing ? 'Procesando...' : 'Procesar Documentos'}
+            {isProcessing ? 'Procesando...' : 
+             uploadMode === 'upload' ? 'Subir y Procesar' : 'Procesar Documentos'}
           </button>
         </div>
       </div>
