@@ -462,7 +462,7 @@ function App() {
                             <div className="no-metrics-message">
                               <p>📊 Métricas RAGAS no disponibles para este modelo</p>
                               <p style={{fontSize: '12px', opacity: '0.7'}}>
-                                {!RAGAS_AVAILABLE ? 'RAGAS no está instalado' : 'Error en el cálculo de métricas'}
+                                Error en el cálculo de métricas
                               </p>
                             </div>
                           )}
