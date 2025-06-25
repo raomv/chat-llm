@@ -46,7 +46,7 @@ function DocumentManager() {
       // Recargar la lista de colecciones
       const collectionsResponse = await axios.get(`${API_URL}/api/collections`);
       setCollections(collectionsResponse.data.collections);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al crear colección:', error);
       setMessage(`Error: ${error.response?.data?.detail || 'No se pudo crear la colección'}`);
     }
@@ -67,7 +67,7 @@ function DocumentManager() {
       });
       
       setMessage(`Procesamiento iniciado: ${response.data.message}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al procesar documentos:', error);
       setMessage(`Error: ${error.response?.data?.detail || 'No se pudieron procesar los documentos'}`);
     } finally {
