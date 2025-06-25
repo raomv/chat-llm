@@ -108,7 +108,7 @@ function DocumentManager() {
       const fileInput = document.getElementById('file-input') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al subir archivos:', error);
       let errorMessage = 'Error desconocido';
       
