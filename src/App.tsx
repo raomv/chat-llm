@@ -177,6 +177,12 @@ function App() {
   const compareModels = async () => {
     if (!input.trim()) return;
     
+    // Validar que hay una colección seleccionada
+    if (!currentCollection) {
+      alert("Por favor selecciona una colección antes de comparar modelos");
+      return;
+    }
+    
     // Mostrar panel de comparación
     setShowComparison(true);
     setIsComparing(true);
@@ -187,7 +193,8 @@ function App() {
       // Enviar solicitud para comparar modelos
       const response = await axios.post(`${API_URL}/compare-models`, {
         message: input,
-        models: selectedModels.length > 0 ? selectedModels : undefined
+        models: selectedModels.length > 0 ? selectedModels : undefined,
+        collection: currentCollection // ✅ Agregar colección
       });
       
       console.log("Respuesta de comparación recibida:", response.data);
