@@ -133,10 +133,11 @@ function App() {
       // Enviar solicitud al backend FastAPI con el modelo y colección seleccionados
       const response = await axios.post(`${API_URL}/chat`, {
         message: userMessage,
-        model: selectedChatModel,      // Ya está ✅
-        collection: currentCollection   // Ya está ✅
+        model: selectedChatModel,
+        collection: currentCollection,
+        chunk_size: 1024  // O hacer configurable desde UI
       }, {
-        timeout: 120000 // 2 minutos de timeout
+        timeout: 120000
       });
       
       console.log("Respuesta recibida:", response.data);
