@@ -25,7 +25,9 @@ function App() {
   const [currentCollection, setCurrentCollection] = useState('');
   const [selectedChatModel, setSelectedChatModel] = useState('');
   const [showModelChangeConfirm, setShowModelChangeConfirm] = useState(false);
+  const [showCollectionChangeConfirm, setShowCollectionChangeConfirm] = useState(false);
   const [pendingModel, setPendingModel] = useState('');
+  const [pendingCollection, setPendingCollection] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Cargar la preferencia de tema al iniciar
@@ -242,7 +244,7 @@ function App() {
     setDarkMode(!darkMode);
   };
 
-  // Nueva función para manejar cambio de modelo en chat
+  // Función para manejar cambio de modelo en chat
   const handleChatModelChange = (newModel: string) => {
     if (messages.length > 0) {
       setPendingModel(newModel);
@@ -252,33 +254,38 @@ function App() {
     }
   };
 
-  // Nueva función para manejar cambio de colección
+  // Función para manejar cambio de colección
   const handleCollectionChange = (newCollection: string) => {
     if (messages.length > 0) {
-      // Mostrar confirmación también para cambio de colección
-      setPendingModel(newCollection);
-      setShowModelChangeConfirm(true);
+      setPendingCollection(newCollection);
+      setShowCollectionChangeConfirm(true);
     } else {
       setCurrentCollection(newCollection);
     }
   };
 
   const confirmModelChange = () => {
-    if (pendingModel.includes('llama') || pendingModel.includes('phi') || pendingModel.includes('mistral')) {
-      // Es un modelo
-      setSelectedChatModel(pendingModel);
-    } else {
-      // Es una colección
-      setCurrentCollection(pendingModel);
-    }
+    setSelectedChatModel(pendingModel);
     setMessages([]);
     setShowModelChangeConfirm(false);
     setPendingModel('');
   };
 
+  const confirmCollectionChange = () => {
+    setCurrentCollection(pendingCollection);
+    setMessages([]);
+    setShowCollectionChangeConfirm(false);
+    setPendingCollection('');
+  };
+
   const cancelModelChange = () => {
     setShowModelChangeConfirm(false);
     setPendingModel('');
+  };
+
+  const cancelCollectionChange = () => {
+    setShowCollectionChangeConfirm(false);
+    setPendingCollection('');
   };
 
   return (
@@ -503,26 +510,29 @@ function App() {
         </div>
       </div>
 
-      {/* Modal de confirmación para cambio de modelo o colección */}
+      {/* Modal de confirmación para cambio de modelo */}
       {showModelChangeConfirm && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>
-              {pendingModel.includes('llama') || pendingModel.includes('phi') || pendingModel.includes('mistral') 
-                ? 'Cambiar modelo de chat' 
-                : 'Cambiar colección activa'}
-            </h3>
-            <p>
-              Al hacer este cambio se borrará la conversación actual. 
-              ¿Deseas continuar?
-            </p>
+            <h3>Cambiar modelo de chat</h3>
+            <p>Al hacer este cambio se borrará la conversación actual. ¿Deseas continuar?</p>
             <div className="modal-buttons">
-              <button onClick={cancelModelChange} className="cancel-button">
-                Cancelar
-              </button>
-              <button onClick={confirmModelChange} className="confirm-button">
-                Aceptar
-              </button>
+              <button onClick={cancelModelChange} className="cancel-button">Cancelar</button>
+              <button onClick={confirmModelChange} className="confirm-button">Aceptar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para cambio de colección */}
+      {showCollectionChangeConfirm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Cambiar colección activa</h3>
+            <p>Al hacer este cambio se borrará la conversación actual. ¿Deseas continuar?</p>
+            <div className="modal-buttons">
+              <button onClick={cancelCollectionChange} className="cancel-button">Cancelar</button>
+              <button onClick={confirmCollectionChange} className="confirm-button">Aceptar</button>
             </div>
           </div>
         </div>
