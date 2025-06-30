@@ -106,12 +106,23 @@ function App() {
     
     if (!input.trim()) return;
     
+    // Validar que estén seleccionados modelo y colección
+    if (!selectedChatModel) {
+      alert("Por favor selecciona un modelo antes de enviar el mensaje");
+      return;
+    }
+    
+    if (!currentCollection) {
+      alert("Por favor selecciona una colección antes de enviar el mensaje");
+      return;
+    }
+    
     // Añadir mensaje del usuario
     const userMessage = input;
     setMessages([...messages, { text: userMessage, isUser: true }]);
     setInput('');
     setIsLoading(true);
-    
+
     try {
       console.log("Enviando consulta...", {
         message: userMessage,
@@ -122,8 +133,8 @@ function App() {
       // Enviar solicitud al backend FastAPI con el modelo y colección seleccionados
       const response = await axios.post(`${API_URL}/chat`, {
         message: userMessage,
-        model: selectedChatModel,
-        collection: currentCollection
+        model: selectedChatModel,      // Ya está ✅
+        collection: currentCollection   // Ya está ✅
       }, {
         timeout: 120000 // 2 minutos de timeout
       });
