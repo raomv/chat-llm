@@ -28,6 +28,8 @@ function App() {
   const [showCollectionChangeConfirm, setShowCollectionChangeConfirm] = useState(false);
   const [pendingModel, setPendingModel] = useState('');
   const [pendingCollection, setPendingCollection] = useState('');
+  // Agregar nuevo estado para juez
+  const [judgeModel, setJudgeModel] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Cargar la preferencia de tema al iniciar
@@ -183,29 +185,44 @@ function App() {
       return;
     }
     
+    if (!judgeModel) {
+      alert("Por favor selecciona un modelo juez para la evaluación");
+      return;
+    }
+    
+    if (selectedModels.length === 0) {
+      alert("Por favor selecciona al menos un modelo para comparar");
+      return;
+    }
+    
     // Mostrar panel de comparación
     setShowComparison(true);
     setIsComparing(true);
     
-    console.log("Enviando solicitud de comparación con modelos:", selectedModels);
+    console.log("Enviando solicitud de comparación académica:", {
+      models: selectedModels,
+      judge: judgeModel,
+      collection: currentCollection
+    });
     
     try {
-      // Enviar solicitud para comparar modelos
+      // Enviar solicitud con modelo juez
       const response = await axios.post(`${API_URL}/compare-models`, {
         message: input,
-        models: selectedModels.length > 0 ? selectedModels : undefined,
-        collection: currentCollection // ✅ Agregar colección
+        models: selectedModels,
+        collection: currentCollection,
+        judge_model: judgeModel  // ← Nuevo campo
       });
       
-      console.log("Respuesta de comparación recibida:", response.data);
+      console.log("Respuesta de evaluación académica recibida:", response.data);
       
-      // Guardar resultados de la comparación
+      // Guardar resultados
       setComparisonResults(response.data.results);
       setMetrics(response.data.metrics);
     } catch (error) {
-      console.error('Error al comparar modelos:', error);
+      console.error('Error en evaluación académica:', error);
       setComparisonResults({
-        error: "Lo siento, ha ocurrido un error al comparar los modelos."
+        error: "Lo siento, ha ocurrido un error en la evaluación académica."
       });
     } finally {
       setIsComparing(false);
@@ -451,6 +468,29 @@ function App() {
                     ))
                   )}
                 </div>
+                
+                {/* Nuevo: Selección de modelo juez */}
+                <div className="judge-selection">
+                  <h4>Selecciona el modelo juez para evaluación:</h4>
+                  <select 
+                    value={judgeModel} 
+                    onChange={(e) => setJudgeModel(e.target.value)}
+                    className="judge-selector"
+                  >
+                    <option value="">Seleccionar modelo juez...</option>
+                    {models
+                      .filter(model => !selectedModels.includes(model))
+                      .map(model => (
+                        <option key={model} value={model}>{model}</option>
+                      ))
+                    }
+                  </select>
+                  {judgeModel && (
+                    <p className="judge-info">
+                      🏅 Juez seleccionado: <strong>{judgeModel}</strong>
+                    </p>
+                  )}
+                </div>
               </div>
               
               <div className="comparison-input">
@@ -463,44 +503,69 @@ function App() {
                 />
                 <button 
                   onClick={compareModels} 
-                  disabled={!input.trim() || isComparing || selectedModels.length === 0}
+                  disabled={
+                    !input.trim() || 
+                    isComparing || 
+                    selectedModels.length === 0 || 
+                    !currentCollection ||
+                    !judgeModel  // ← Nueva validación
+                  }
                 >
-                  {isComparing ? "Consultando..." : "Obtener métricas"}
+                  {isComparing ? "Evaluando..." : "Obtener evaluación académica"}
                 </button>
               </div>
               
-              {comparisonResults && !isComparing && (
-                <div className="results-grid">
-                  {Object.keys(comparisonResults).map(model => (
-                    <div key={model} className="model-result-card">
-                      <h3 className="model-name">{model}</h3>
+              {showComparison && comparisonResults && (
+                <div className="comparison-panel">
+                  <h3>📊 Evaluación Académica con LlamaIndex</h3>
+                  
+                  {/* Mostrar información del juez */}
+                  <div className="judge-info-panel">
+                    <h4>🏅 Modelo Juez: {judgeModel}</h4>
+                    <p>El modelo juez evalúa las respuestas usando métricas académicas estándar</p>
+                  </div>
+                  
+                  {/* Mostrar resultados por modelo */}
+                  {Object.entries(comparisonResults).map(([model, response]) => (
+                    <div key={model} className="model-comparison">
+                      <h3>🤖 Modelo: {model}</h3>
+                      <div className="model-response">{response}</div>
                       
+                      {/* Métricas académicas evaluadas por el juez */}
                       {metrics && metrics[model] && !metrics[model].error && (
-                        <div className="metrics-container">
-                          <h4>Métricas de Evaluación RAGAS:</h4>
-                          {renderMetricBar(metrics[model].faithfulness, "Fidelidad")}
-                          {renderMetricBar(metrics[model].answer_relevancy, "Relevancia")}
-                          {renderMetricBar(metrics[model].context_relevancy, "Precisión")}
-                          {renderMetricBar(metrics[model].overall_score, "Puntuación global")}
-                          
-                          {/* Mostrar mensaje si no hay métricas */}
-                          {!metrics[model].faithfulness && !metrics[model].answer_relevancy && !metrics[model].context_relevancy && (
-                            <div className="no-metrics-message">
-                              <p>📊 Métricas RAGAS no disponibles para este modelo</p>
-                              <p style={{fontSize: '12px', opacity: '0.7'}}>
-                                Error en el cálculo de métricas
-                              </p>
-                            </div>
-                          )}
+                        <div className="academic-metrics">
+                          <h4>📊 Evaluación del Juez ({judgeModel})</h4>
+                          <div className="metrics-grid">
+                            {Object.entries(metrics[model])
+                              .filter(([key]) => key !== 'overall_score')
+                              .map(([metric, data]) => (
+                                <div key={metric} className="metric-item">
+                                  <span className="metric-name">{metric}:</span>
+                                  <span className="metric-score">
+                                    {data.score ? data.score.toFixed(2) : 'N/A'}
+                                    {data.passing ? ' ✅' : ' ❌'}
+                                  </span>
+                                  {data.feedback && (
+                                    <div className="metric-feedback">{data.feedback}</div>
+                                  )}
+                                </div>
+                              ))}
+                            
+                            {/* Puntuación general */}
+                            {metrics[model].overall_score !== undefined && (
+                              <div className="overall-score">
+                                <strong>Puntuación General: {metrics[model].overall_score.toFixed(2)}</strong>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                       
-                      <div className="model-answer">
-                        <h4>Respuesta:</h4>
-                        <div className="answer-text">
-                          {comparisonResults[model]}
+                      {metrics && metrics[model] && metrics[model].error && (
+                        <div className="metric-error">
+                          ❌ Error en evaluación: {metrics[model].error}
                         </div>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
