@@ -95,10 +95,8 @@ function DocumentManager() {
       formData.append('chunk_size', chunkSize.toString());
       
       const response = await axios.post(`${API_URL}/api/documents/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 300000 // 5 minutos
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 1800000 // 30 minutos (1800 * 1000 ms)
       });
       
       setMessage(`✅ ${response.data.message}`);
