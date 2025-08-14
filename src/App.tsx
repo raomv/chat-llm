@@ -7,8 +7,31 @@ import './App.css';
 // URL del backend - Ajusta según tu configuración
 const API_URL = 'http://localhost:8000';
 
+// ✅ AÑADIR tipos que faltan
+interface Message {
+  text: string;
+  isUser: boolean;
+}
+
+interface RetrievalMetrics {
+  query: string;
+  hit_rate: number;
+  mrr: number;
+  retrieved_count: number;
+  interpretation?: {
+    hit_rate_status: string;
+    mrr_quality: string;
+  };
+  metadata?: {
+    embedding_model: string;
+    vector_store: string;
+    evaluation_timestamp: number;
+  };
+  error?: string;
+}
+
 function App() {
-  const [messages, setMessages] = useState<{text: string, isUser: boolean}[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<string[]>([]);
@@ -19,19 +42,20 @@ function App() {
   const [isComparing, setIsComparing] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
   const [showDocumentManager, setShowDocumentManager] = useState(false);
-  // Nuevo estado para el tema
   const [darkMode, setDarkMode] = useState(false);
   const [collections, setCollections] = useState<string[]>([]);
   const [currentCollection, setCurrentCollection] = useState('');
   const [selectedChatModel, setSelectedChatModel] = useState('');
+  const [error, setError] = useState('');
   const [showModelChangeConfirm, setShowModelChangeConfirm] = useState(false);
   const [showCollectionChangeConfirm, setShowCollectionChangeConfirm] = useState(false);
   const [pendingModel, setPendingModel] = useState('');
   const [pendingCollection, setPendingCollection] = useState('');
-  // Agregar nuevo estado para juez
   const [judgeModel, setJudgeModel] = useState<string>('');
+  // ✅ AÑADIR estados que faltaban para métricas de retrieval
   const [includeRetrievalMetrics, setIncludeRetrievalMetrics] = useState(false);
-  const [retrievalMetrics, setRetrievalMetrics] = useState(null);
+  const [retrievalMetrics, setRetrievalMetrics] = useState<RetrievalMetrics | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Cargar la preferencia de tema al iniciar
@@ -40,7 +64,6 @@ function App() {
     if (savedTheme) {
       setDarkMode(savedTheme === 'true');
     } else {
-      // Opcionalmente, detectar preferencia del sistema
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setDarkMode(prefersDark);
     }
@@ -64,7 +87,6 @@ function App() {
           setModels(response.data.models);
           console.log("Modelos cargados:", response.data.models);
           
-          // Preseleccionar el modelo por defecto para chat y comparación
           if (response.data.default_model) {
             setSelectedModels([response.data.default_model]);
             setSelectedChatModel(response.data.default_model);
@@ -112,7 +134,6 @@ function App() {
     
     if (!input.trim()) return;
     
-    // Validar que estén seleccionados modelo y colección
     if (!selectedChatModel) {
       alert("Por favor selecciona un modelo antes de enviar el mensaje");
       return;
@@ -123,7 +144,6 @@ function App() {
       return;
     }
     
-    // Añadir mensaje del usuario
     const userMessage = input;
     setMessages([...messages, { text: userMessage, isUser: true }]);
     setInput('');
@@ -136,25 +156,20 @@ function App() {
         collection: currentCollection
       });
       
-      // Enviar solicitud al backend FastAPI con el modelo y colección seleccionados
       const response = await axios.post(`${API_URL}/chat`, {
         message: userMessage,
         model: selectedChatModel,
         collection: currentCollection,
-        chunk_size: 1024  // O hacer configurable desde UI
+        chunk_size: 1024
       }, {
         timeout: 120000
       });
       
       console.log("Respuesta recibida:", response.data);
       
-      // Añadir respuesta de la IA
       setMessages(prev => [...prev, { text: response.data.response, isUser: false }]);
     } catch (error: any) {
       console.error('Error completo:', error);
-      console.error('Error response:', error.response);
-      console.error('Error request:', error.request);
-      console.error('Error message:', error.message);
       
       let errorMessage = "Ha ocurrido un error inesperado.";
       
@@ -177,7 +192,6 @@ function App() {
     }
   };
 
-  // Agregar la función de comparación aquí
   const compareModels = async () => {
     setIsLoading(true);
     setError('');
@@ -191,16 +205,15 @@ function App() {
         models: selectedModels,
         collection: currentCollection,
         judge_model: judgeModel,
-        include_retrieval_metrics: includeRetrievalMetrics  // ✅ NUEVO
+        include_retrieval_metrics: includeRetrievalMetrics
       });
       
       console.log("✅ Respuesta recibida:", response.data);
       
       setComparisonResults(response.data.results);
       setMetrics(response.data.metrics);
-      setRetrievalMetrics(response.data.retrieval_metrics);  // ✅ NUEVO
+      setRetrievalMetrics(response.data.retrieval_metrics);
       
-      // ✅ Log específico para métricas de retrieval
       if (response.data.retrieval_metrics) {
         console.log("📊 Métricas de retrieval recibidas:", response.data.retrieval_metrics);
       }
@@ -215,19 +228,16 @@ function App() {
 
   const handleModelSelection = (model: string) => {
     setSelectedModels(prev => {
-      // Si ya está seleccionado, quitarlo
       if (prev.includes(model)) {
         return prev.filter(m => m !== model);
       }
-      // Si no está seleccionado, añadirlo
       return [...prev, model];
     });
   };
 
   const renderMetricBar = (value: number | null | undefined, label: string) => {
-    // Si no hay valor o RAGAS no está disponible, no mostrar la métrica
     if (value === null || value === undefined) {
-      return null; // No renderizar nada
+      return null;
     }
     
     return (
@@ -247,12 +257,10 @@ function App() {
     );
   };
 
-  // Función para cambiar el tema
   const toggleTheme = () => {
     setDarkMode(!darkMode);
   };
 
-  // Función para manejar cambio de modelo en chat
   const handleChatModelChange = (newModel: string) => {
     if (messages.length > 0) {
       setPendingModel(newModel);
@@ -262,7 +270,6 @@ function App() {
     }
   };
 
-  // Función para manejar cambio de colección
   const handleCollectionChange = (newCollection: string) => {
     if (messages.length > 0) {
       setPendingCollection(newCollection);
@@ -390,7 +397,6 @@ function App() {
           {showDocumentManager ? (
             <DocumentManager />
           ) : !showComparison ? (
-            // Vista normal del chat
             <>
               <div className="messages-container">
                 {messages.length === 0 ? (
@@ -432,7 +438,6 @@ function App() {
               </form>
             </>
           ) : (
-            // Vista de comparación de modelos
             <div className="comparison-container">
               <div className="model-selection">
                 <h3>Selecciona los modelos a comparar:</h3>
@@ -453,7 +458,6 @@ function App() {
                   )}
                 </div>
                 
-                {/* Nuevo: Selección de modelo juez */}
                 <div className="judge-selection">
                   <h4>Selecciona el modelo juez para evaluación:</h4>
                   <select 
@@ -475,6 +479,22 @@ function App() {
                     </p>
                   )}
                 </div>
+
+                {/* ✅ AÑADIR: Checkbox para métricas de retrieval */}
+                <div className="model-option retrieval-option">
+                  <label className="retrieval-label">
+                    <input
+                      type="checkbox"
+                      checked={includeRetrievalMetrics}
+                      onChange={(e) => setIncludeRetrievalMetrics(e.target.checked)}
+                      className="retrieval-checkbox"
+                    />
+                    📊 Evaluar calidad del retrieval para esta pregunta
+                  </label>
+                  <div className="option-description">
+                    Evalúa Hit Rate y MRR del sistema de búsqueda vectorial (FastEmbed + Qdrant)
+                  </div>
+                </div>
               </div>
               
               <div className="comparison-input">
@@ -492,7 +512,7 @@ function App() {
                     isComparing || 
                     selectedModels.length === 0 || 
                     !currentCollection ||
-                    !judgeModel  // ← Nueva validación
+                    !judgeModel
                   }
                 >
                   {isComparing ? "Evaluando..." : "Obtener evaluación académica"}
@@ -503,26 +523,23 @@ function App() {
                 <div className="comparison-panel">
                   <h3>📊 Evaluación Académica con LlamaIndex</h3>
                   
-                  {/* Mostrar información del juez */}
                   <div className="judge-info-panel">
                     <h4>🏅 Modelo Juez: {judgeModel}</h4>
                     <p>El modelo juez evalúa las respuestas usando métricas académicas estándar</p>
                   </div>
                   
-                  {/* Mostrar resultados por modelo */}
                   {Object.entries(comparisonResults).map(([model, response]) => (
                     <div key={model} className="model-comparison">
                       <h3>🤖 Modelo: {model}</h3>
-                      <div className="model-response">{response}</div>
+                      <div className="model-response">{response as string}</div>
                       
-                      {/* Métricas académicas evaluadas por el juez */}
                       {metrics && metrics[model] && !metrics[model].error && (
                         <div className="academic-metrics">
                           <h4>📊 Evaluación del Juez ({judgeModel})</h4>
                           <div className="metrics-grid">
                             {Object.entries(metrics[model])
                               .filter(([key]) => key !== 'overall_score')
-                              .map(([metric, data]) => (
+                              .map(([metric, data]: [string, any]) => (
                                 <div key={metric} className="metric-item">
                                   <span className="metric-name">{metric}:</span>
                                   <span className="metric-score">
@@ -535,7 +552,6 @@ function App() {
                                 </div>
                               ))}
                             
-                            {/* Puntuación general */}
                             {metrics[model].overall_score !== undefined && (
                               <div className="overall-score">
                                 <strong>Puntuación General: {metrics[model].overall_score.toFixed(2)}</strong>
@@ -566,7 +582,7 @@ function App() {
         </div>
       </div>
 
-      {/* Modal de confirmación para cambio de modelo */}
+      {/* Modales de confirmación */}
       {showModelChangeConfirm && (
         <div className="modal-overlay">
           <div className="modal">
@@ -580,7 +596,6 @@ function App() {
         </div>
       )}
 
-      {/* Modal de confirmación para cambio de colección */}
       {showCollectionChangeConfirm && (
         <div className="modal-overlay">
           <div className="modal">
@@ -594,7 +609,7 @@ function App() {
         </div>
       )}
 
-      {/* ✅ NUEVO: Panel de métricas de retrieval */}
+      {/* ✅ Panel de métricas de retrieval */}
       {retrievalMetrics && !retrievalMetrics.error && (
         <div className="retrieval-metrics-panel">
           <h3>🔍 Calidad del Retrieval para tu Pregunta</h3>
@@ -649,7 +664,6 @@ function App() {
         </div>
       )}
 
-      {/* ✅ NUEVO: Error en métricas de retrieval */}
       {retrievalMetrics?.error && (
         <div className="retrieval-error">
           ❌ Error evaluando métricas de retrieval: {retrievalMetrics.error}
