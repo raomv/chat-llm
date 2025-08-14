@@ -7,7 +7,6 @@ import './App.css';
 // URL del backend - Ajusta según tu configuración
 const API_URL = 'http://localhost:8000';
 
-// ✅ AÑADIR tipos que faltan
 interface Message {
   text: string;
   isUser: boolean;
@@ -46,13 +45,12 @@ function App() {
   const [collections, setCollections] = useState<string[]>([]);
   const [currentCollection, setCurrentCollection] = useState('');
   const [selectedChatModel, setSelectedChatModel] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); // ✅ MANTENER pero USAR en la UI
   const [showModelChangeConfirm, setShowModelChangeConfirm] = useState(false);
   const [showCollectionChangeConfirm, setShowCollectionChangeConfirm] = useState(false);
   const [pendingModel, setPendingModel] = useState('');
   const [pendingCollection, setPendingCollection] = useState('');
   const [judgeModel, setJudgeModel] = useState<string>('');
-  // ✅ AÑADIR estados que faltaban para métricas de retrieval
   const [includeRetrievalMetrics, setIncludeRetrievalMetrics] = useState(false);
   const [retrievalMetrics, setRetrievalMetrics] = useState<RetrievalMetrics | null>(null);
   
@@ -101,6 +99,7 @@ function App() {
       } catch (error) {
         console.error('Error al cargar modelos:', error);
         setModels(["Error de conexión"]);
+        setError('Error cargando modelos del servidor');
       } finally {
         setIsLoadingModels(false);
       }
@@ -118,6 +117,7 @@ function App() {
         setCurrentCollection(response.data.current);
       } catch (error) {
         console.error('Error al cargar colecciones:', error);
+        setError('Error cargando colecciones del servidor');
       }
     };
     
@@ -135,12 +135,12 @@ function App() {
     if (!input.trim()) return;
     
     if (!selectedChatModel) {
-      alert("Por favor selecciona un modelo antes de enviar el mensaje");
+      setError("Por favor selecciona un modelo antes de enviar el mensaje");
       return;
     }
     
     if (!currentCollection) {
-      alert("Por favor selecciona una colección antes de enviar el mensaje");
+      setError("Por favor selecciona una colección antes de enviar el mensaje");
       return;
     }
     
@@ -148,6 +148,7 @@ function App() {
     setMessages([...messages, { text: userMessage, isUser: true }]);
     setInput('');
     setIsLoading(true);
+    setError(''); // ✅ Limpiar errores
 
     try {
       console.log("Enviando consulta...", {
@@ -183,6 +184,7 @@ function App() {
         errorMessage = `Error de configuración: ${error.message}`;
       }
       
+      setError(errorMessage); // ✅ Mostrar error
       setMessages(prev => [...prev, { 
         text: errorMessage, 
         isUser: false 
@@ -193,13 +195,38 @@ function App() {
   };
 
   const compareModels = async () => {
-    setIsLoading(true);
-    setError('');
+    if (!input.trim()) {
+      setError("Por favor escribe una pregunta para comparar");
+      return;
+    }
+    
+    if (!currentCollection) {
+      setError("Por favor selecciona una colección antes de comparar modelos");
+      return;
+    }
+    
+    if (selectedModels.length === 0) {
+      setError("Por favor selecciona al menos un modelo para comparar");
+      return;
+    }
+    
+    if (!judgeModel) {
+      setError("Por favor selecciona un modelo juez para la evaluación");
+      return;
+    }
+    
+    // ✅ Asegurar que se muestran los estados correctos
+    setShowComparison(true);
+    setIsComparing(true);
+    setError(''); // Limpiar errores anteriores
+    setComparisonResults(null);
+    setMetrics(null);
+    setRetrievalMetrics(null);
+    
+    console.log("📊 Iniciando comparación de modelos...");
+    console.log("🔍 Incluir métricas de retrieval:", includeRetrievalMetrics);
     
     try {
-      console.log("📊 Iniciando comparación de modelos...");
-      console.log("🔍 Incluir métricas de retrieval:", includeRetrievalMetrics);
-      
       const response = await axios.post(`${API_URL}/compare-models`, {
         message: input,
         models: selectedModels,
@@ -218,11 +245,12 @@ function App() {
         console.log("📊 Métricas de retrieval recibidas:", response.data.retrieval_metrics);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error comparing models:', error);
-      setError('Error al comparar modelos. Por favor, inténtalo de nuevo.');
+      const errorMsg = error.response?.data?.detail || 'Error al comparar modelos. Por favor, inténtalo de nuevo.';
+      setError(errorMsg);
     } finally {
-      setIsLoading(false);
+      setIsComparing(false);
     }
   };
 
@@ -233,28 +261,6 @@ function App() {
       }
       return [...prev, model];
     });
-  };
-
-  const renderMetricBar = (value: number | null | undefined, label: string) => {
-    if (value === null || value === undefined) {
-      return null;
-    }
-    
-    return (
-      <div className="metric">
-        <span>{label}:</span>
-        <div className="meter">
-          <div 
-            className="meter-fill" 
-            style={{
-              width: `${value * 100}%`,
-              backgroundColor: value < 0.5 ? '#ff4d4d' : value < 0.7 ? '#ffdd57' : '#00c851'
-            }}
-          ></div>
-        </div>
-        <span>{(value * 100).toFixed(1)}%</span>
-      </div>
-    );
   };
 
   const toggleTheme = () => {
@@ -282,6 +288,7 @@ function App() {
   const confirmModelChange = () => {
     setSelectedChatModel(pendingModel);
     setMessages([]);
+    setError('');
     setShowModelChangeConfirm(false);
     setPendingModel('');
   };
@@ -289,6 +296,7 @@ function App() {
   const confirmCollectionChange = () => {
     setCurrentCollection(pendingCollection);
     setMessages([]);
+    setError('');
     setShowCollectionChangeConfirm(false);
     setPendingCollection('');
   };
@@ -312,6 +320,7 @@ function App() {
             onClick={() => {
               setShowComparison(false);
               setShowDocumentManager(false);
+              setError('');
             }}
             className={`mode-button ${!showComparison && !showDocumentManager ? 'active' : ''}`}
           >
@@ -321,6 +330,7 @@ function App() {
             onClick={() => {
               setShowComparison(true);
               setShowDocumentManager(false);
+              setError('');
             }}
             className={`mode-button ${showComparison ? 'active' : ''}`}
           >
@@ -371,6 +381,7 @@ function App() {
             onClick={() => {
               setShowComparison(false);
               setShowDocumentManager(!showDocumentManager);
+              setError('');
             }}
             className={`mode-button ${showDocumentManager ? 'active' : ''}`}
           >
@@ -393,6 +404,14 @@ function App() {
               </button>
             </div>
           </header>
+          
+          {/* ✅ AÑADIR: Mostrar errores globales */}
+          {error && (
+            <div className="error-banner">
+              ❌ {error}
+              <button onClick={() => setError('')} className="error-close">✕</button>
+            </div>
+          )}
           
           {showDocumentManager ? (
             <DocumentManager />
@@ -480,7 +499,6 @@ function App() {
                   )}
                 </div>
 
-                {/* ✅ AÑADIR: Checkbox para métricas de retrieval */}
                 <div className="model-option retrieval-option">
                   <label className="retrieval-label">
                     <input
@@ -519,7 +537,20 @@ function App() {
                 </button>
               </div>
               
-              {showComparison && comparisonResults && (
+              {/* ✅ MOSTRAR indicador de carga ANTES de los resultados */}
+              {isComparing && (
+                <div className="comparison-loading">
+                  <div className="loading-spinner"></div>
+                  <p>🔍 Ejecutando evaluación académica...</p>
+                  <p className="loading-details">
+                    Esto puede tomar varios minutos. Evaluando {selectedModels.length} modelo(s) 
+                    con {includeRetrievalMetrics ? '6 métricas (incluye retrieval)' : '5 métricas'}
+                  </p>
+                </div>
+              )}
+              
+              {/* Resultados solo cuando NO está cargando */}
+              {!isComparing && comparisonResults && (
                 <div className="comparison-panel">
                   <h3>📊 Evaluación Académica con LlamaIndex</h3>
                   
@@ -568,13 +599,67 @@ function App() {
                       )}
                     </div>
                   ))}
-                </div>
-              )}
-              
-              {isComparing && (
-                <div className="comparison-loading">
-                  <div className="loading-spinner"></div>
-                  <p>Comparando modelos, por favor espera...</p>
+                  
+                  {/* Panel de métricas de retrieval */}
+                  {retrievalMetrics && !retrievalMetrics.error && (
+                    <div className="retrieval-metrics-panel">
+                      <h3>🔍 Calidad del Retrieval para tu Pregunta</h3>
+                      
+                      <div className="query-display">
+                        <strong>Tu pregunta:</strong> <span className="user-query">{retrievalMetrics.query}</span>
+                      </div>
+                      
+                      <div className="retrieval-info">
+                        <div className="info-item">
+                          <span>📄 Modelo de Embeddings:</span>
+                          <span>{retrievalMetrics.metadata?.embedding_model || 'FastEmbed'}</span>
+                        </div>
+                        <div className="info-item">
+                          <span>🗄️ Base de Datos:</span>
+                          <span>{retrievalMetrics.metadata?.vector_store || 'Qdrant'}</span>
+                        </div>
+                        <div className="info-item">
+                          <span>📄 Docs Recuperados:</span>
+                          <span>{retrievalMetrics.retrieved_count}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="metrics-grid">
+                        <div className={`metric-card ${retrievalMetrics.interpretation?.hit_rate_status}`}>
+                          <div className="metric-name">Hit Rate</div>
+                          <div className="metric-value">{retrievalMetrics.hit_rate.toFixed(3)}</div>
+                          <div className="metric-description">
+                            {retrievalMetrics.hit_rate === 1.0 
+                              ? "✅ Se encontraron documentos relevantes" 
+                              : "⚠️ No se encontraron documentos suficientemente relevantes"}
+                          </div>
+                        </div>
+                        
+                        <div className={`metric-card ${retrievalMetrics.interpretation?.mrr_quality}`}>
+                          <div className="metric-name">MRR (Mean Reciprocal Rank)</div>
+                          <div className="metric-value">{retrievalMetrics.mrr.toFixed(3)}</div>
+                          <div className="metric-description">
+                            {retrievalMetrics.mrr > 0.8 ? "🎯 Excelente ranking" :
+                             retrievalMetrics.mrr > 0.5 ? "👍 Buen ranking" : "⚠️ Ranking mejorable"}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="retrieval-explanation">
+                        <h4>📖 Interpretación de Métricas</h4>
+                        <ul>
+                          <li><strong>Hit Rate:</strong> ¿Se encontraron documentos relevantes en los resultados?</li>
+                          <li><strong>MRR:</strong> ¿En qué posición aparece el primer documento relevante?</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {retrievalMetrics?.error && (
+                    <div className="retrieval-error">
+                      ❌ Error evaluando métricas de retrieval: {retrievalMetrics.error}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -606,67 +691,6 @@ function App() {
               <button onClick={confirmCollectionChange} className="confirm-button">Aceptar</button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ✅ Panel de métricas de retrieval */}
-      {retrievalMetrics && !retrievalMetrics.error && (
-        <div className="retrieval-metrics-panel">
-          <h3>🔍 Calidad del Retrieval para tu Pregunta</h3>
-          
-          <div className="query-display">
-            <strong>Tu pregunta:</strong> <span className="user-query">{retrievalMetrics.query}</span>
-          </div>
-          
-          <div className="retrieval-info">
-            <div className="info-item">
-              <span>📄 Modelo de Embeddings:</span>
-              <span>{retrievalMetrics.metadata?.embedding_model || 'FastEmbed'}</span>
-            </div>
-            <div className="info-item">
-              <span>🗄️ Base de Datos:</span>
-              <span>{retrievalMetrics.metadata?.vector_store || 'Qdrant'}</span>
-            </div>
-            <div className="info-item">
-              <span>📄 Docs Recuperados:</span>
-              <span>{retrievalMetrics.retrieved_count}</span>
-            </div>
-          </div>
-          
-          <div className="metrics-grid">
-            <div className={`metric-card ${retrievalMetrics.interpretation?.hit_rate_status}`}>
-              <div className="metric-name">Hit Rate</div>
-              <div className="metric-value">{retrievalMetrics.hit_rate.toFixed(3)}</div>
-              <div className="metric-description">
-                {retrievalMetrics.hit_rate === 1.0 
-                  ? "✅ Se encontraron documentos relevantes" 
-                  : "⚠️ No se encontraron documentos suficientemente relevantes"}
-              </div>
-            </div>
-            
-            <div className={`metric-card ${retrievalMetrics.interpretation?.mrr_quality}`}>
-              <div className="metric-name">MRR (Mean Reciprocal Rank)</div>
-              <div className="metric-value">{retrievalMetrics.mrr.toFixed(3)}</div>
-              <div className="metric-description">
-                {retrievalMetrics.mrr > 0.8 ? "🎯 Excelente ranking" :
-                 retrievalMetrics.mrr > 0.5 ? "👍 Buen ranking" : "⚠️ Ranking mejorable"}
-              </div>
-            </div>
-          </div>
-          
-          <div className="retrieval-explanation">
-            <h4>📖 Interpretación de Métricas</h4>
-            <ul>
-              <li><strong>Hit Rate:</strong> ¿Se encontraron documentos relevantes en los resultados?</li>
-              <li><strong>MRR:</strong> ¿En qué posición aparece el primer documento relevante?</li>
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {retrievalMetrics?.error && (
-        <div className="retrieval-error">
-          ❌ Error evaluando métricas de retrieval: {retrievalMetrics.error}
         </div>
       )}
     </div>
