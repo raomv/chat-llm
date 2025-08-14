@@ -578,10 +578,22 @@ function App() {
                                       {typeof data === 'object' && data !== null ? (
                                         <>
                                           <span>{data.score?.toFixed(3) || 'N/A'}</span>
-                                          <span>{data.passing ? '✅' : '❌'}</span>
+                                          {/* ✅ INDICADOR VISUAL BASADO EN SCORE, NO EN BOOLEAN */}
+                                          <span style={{marginLeft: '8px'}}>
+                                            {data.score !== undefined && (
+                                              data.score >= 0.8 ? '🟢' : 
+                                              data.score >= 0.6 ? '🟡' : 
+                                              data.score >= 0.4 ? '🟠' : '🔴'
+                                            )}
+                                          </span>
                                         </>
                                       ) : typeof data === 'number' ? (
-                                        <span>{data.toFixed(3)}</span>
+                                        <>
+                                          <span>{data.toFixed(3)}</span>
+                                          <span style={{marginLeft: '8px'}}>
+                                            {data >= 0.8 ? '🟢' : data >= 0.6 ? '🟡' : data >= 0.4 ? '🟠' : '🔴'}
+                                          </span>
+                                        </>
                                       ) : (
                                         <span>N/A</span>
                                       )}
