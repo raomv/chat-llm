@@ -1103,3 +1103,176 @@ input[type="file"]:hover {
   border-radius: 4px;
   margin-top: 10px;
 }
+
+/* Estilos para opción de retrieval */
+.retrieval-option {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #f0f7ff;
+  border-radius: 8px;
+  border-left: 4px solid #007acc;
+}
+
+.retrieval-label {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.retrieval-checkbox {
+  margin-right: 10px;
+  transform: scale(1.1);
+}
+
+.option-description {
+  font-size: 0.9em;
+  color: #666;
+  font-style: italic;
+  margin-left: 25px;
+}
+
+/* Panel de métricas de retrieval */
+.retrieval-metrics-panel {
+  background-color: #f8f9fa;
+  padding: 25px;
+  border-radius: 10px;
+  margin: 25px 0;
+  border: 2px solid #17a2b8;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.query-display {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #e9ecef;
+  border-radius: 6px;
+  border-left: 4px solid #007acc;
+}
+
+.user-query {
+  color: #007acc;
+  font-weight: 500;
+}
+
+.retrieval-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #e9ecef;
+  border-radius: 6px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-item span:first-child {
+  font-weight: 500;
+  color: #495057;
+}
+
+.info-item span:last-child {
+  font-weight: bold;
+  color: #007acc;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.metric-card {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: border-color 0.3s ease;
+}
+
+.metric-card.success {
+  border-color: #28a745;
+  background-color: #f8fff9;
+}
+
+.metric-card.warning {
+  border-color: #ffc107;
+  background-color: #fffef5;
+}
+
+.metric-card.excellent {
+  border-color: #28a745;
+  background-color: #f8fff9;
+}
+
+.metric-card.good {
+  border-color: #17a2b8;
+  background-color: #f0fdff;
+}
+
+.metric-card.poor {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.metric-name {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #495057;
+  margin-bottom: 10px;
+}
+
+.metric-value {
+  font-size: 2.2em;
+  font-weight: bold;
+  color: #007acc;
+  margin: 15px 0;
+}
+
+.metric-description {
+  font-size: 0.9em;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.retrieval-explanation {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.retrieval-explanation h4 {
+  margin-bottom: 10px;
+  color: #495057;
+}
+
+.retrieval-explanation ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.retrieval-explanation li {
+  margin: 5px 0;
+  color: #6c757d;
+}
+
+.retrieval-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin: 15px 0;
+  font-weight: 500;
+}
