@@ -569,23 +569,41 @@ function App() {
                               .filter(([key]) => key !== 'overall_score' && key !== 'error')
                               .map(([metric, data]: [string, any]) => (
                                 <div key={metric} className="metric-item">
-                                  <span className="metric-name">{metric}:</span>
-                                  <span className="metric-score">
-                                    {typeof data === 'object' && data !== null
-                                      ? `${data.score?.toFixed(2) || 'N/A'} ${data.passing ? '✅' : '❌'}`
-                                      : typeof data === 'number' 
-                                        ? data.toFixed(2)
-                                        : 'N/A'}
-                                  </span>
-                                  {typeof data === 'object' && data !== null && data.feedback && (
-                                    <div className="metric-feedback">{data.feedback}</div>
-                                  )}
+                                  {/* ✅ COLUMNA IZQUIERDA: Nombre y puntuación */}
+                                  <div className="metric-left">
+                                    <div className="metric-name">
+                                      {metric.replace('_', ' ')}
+                                    </div>
+                                    <div className="metric-score">
+                                      {typeof data === 'object' && data !== null ? (
+                                        <>
+                                          <span>{data.score?.toFixed(3) || 'N/A'}</span>
+                                          <span>{data.passing ? '✅' : '❌'}</span>
+                                        </>
+                                      ) : typeof data === 'number' ? (
+                                        <span>{data.toFixed(3)}</span>
+                                      ) : (
+                                        <span>N/A</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* ✅ COLUMNA DERECHA: Feedback completo */}
+                                  <div className="metric-content">
+                                    {typeof data === 'object' && data !== null && data.feedback && (
+                                      <div className="metric-feedback">
+                                        <strong>💬 Feedback del Juez:</strong><br />
+                                        {data.feedback}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               ))}
                             
+                            {/* ✅ OVERALL SCORE */}
                             {metrics[model].overall_score !== undefined && (
                               <div className="overall-score">
-                                <strong>Puntuación General: {metrics[model].overall_score.toFixed(2)}</strong>
+                                <strong>🎯 Puntuación General: {metrics[model].overall_score.toFixed(3)}</strong>
                               </div>
                             )}
                           </div>

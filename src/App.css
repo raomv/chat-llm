@@ -1073,6 +1073,16 @@ input[type="file"]:hover {
   margin-top: 15px;
 }
 
+/* REEMPLAZAR líneas 1073-1078 (comentar el CSS genérico problemático): */
+/*
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+*/
+
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1346,15 +1356,61 @@ input[type="file"]:hover {
 }
 
 /* Estilos para tarjetas académicas */
+/* REEMPLAZAR líneas 1318-1327 (.academic-metrics .metric-item): */
 .academic-metrics .metric-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
   padding: 12px;
   background-color: var(--card-bg);
   border-radius: 6px;
   border: 1px solid var(--input-border);
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  align-items: start;
+}
+
+.academic-metrics .metric-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.academic-metrics .metric-name {
+  font-weight: 600;
+  color: var(--primary-color);
+  text-transform: capitalize;
+  font-size: 0.95em;
+  margin: 0;
+}
+
+.academic-metrics .metric-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-top: 4px;
+}
+
+.academic-metrics .metric-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.academic-metrics .metric-feedback {
+  background-color: var(--chat-bg);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  line-height: 1.4;
+  color: var(--text-color);
+  border-left: 3px solid var(--primary-color);
+  font-style: italic;
+  max-height: 150px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .academic-metrics .metric-header {
