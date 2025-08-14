@@ -45,7 +45,7 @@ function App() {
   const [collections, setCollections] = useState<string[]>([]);
   const [currentCollection, setCurrentCollection] = useState('');
   const [selectedChatModel, setSelectedChatModel] = useState('');
-  const [error, setError] = useState(''); // ✅ MANTENER pero USAR en la UI
+  const [error, setError] = useState('');
   const [showModelChangeConfirm, setShowModelChangeConfirm] = useState(false);
   const [showCollectionChangeConfirm, setShowCollectionChangeConfirm] = useState(false);
   const [pendingModel, setPendingModel] = useState('');
@@ -148,7 +148,7 @@ function App() {
     setMessages([...messages, { text: userMessage, isUser: true }]);
     setInput('');
     setIsLoading(true);
-    setError(''); // ✅ Limpiar errores
+    setError('');
 
     try {
       console.log("Enviando consulta...", {
@@ -184,7 +184,7 @@ function App() {
         errorMessage = `Error de configuración: ${error.message}`;
       }
       
-      setError(errorMessage); // ✅ Mostrar error
+      setError(errorMessage);
       setMessages(prev => [...prev, { 
         text: errorMessage, 
         isUser: false 
@@ -215,10 +215,10 @@ function App() {
       return;
     }
     
-    // ✅ Asegurar que se muestran los estados correctos
+    // Asegurar que se muestran los estados correctos
     setShowComparison(true);
     setIsComparing(true);
-    setError(''); // Limpiar errores anteriores
+    setError('');
     setComparisonResults(null);
     setMetrics(null);
     setRetrievalMetrics(null);
@@ -405,9 +405,8 @@ function App() {
             </div>
           </header>
           
-          {/* ✅ AÑADIR: Mostrar errores globales */}
           {error && (
-            <div className="error-banner">
+            <div className="error-message">
               ❌ {error}
               <button onClick={() => setError('')} className="error-close">✕</button>
             </div>
@@ -537,7 +536,6 @@ function App() {
                 </button>
               </div>
               
-              {/* ✅ MOSTRAR indicador de carga ANTES de los resultados */}
               {isComparing && (
                 <div className="comparison-loading">
                   <div className="loading-spinner"></div>
@@ -549,7 +547,6 @@ function App() {
                 </div>
               )}
               
-              {/* Resultados solo cuando NO está cargando */}
               {!isComparing && comparisonResults && (
                 <div className="comparison-panel">
                   <h3>📊 Evaluación Académica con LlamaIndex</h3>
@@ -569,15 +566,18 @@ function App() {
                           <h4>📊 Evaluación del Juez ({judgeModel})</h4>
                           <div className="metrics-grid">
                             {Object.entries(metrics[model])
-                              .filter(([key]) => key !== 'overall_score')
+                              .filter(([key]) => key !== 'overall_score' && key !== 'error')
                               .map(([metric, data]: [string, any]) => (
                                 <div key={metric} className="metric-item">
                                   <span className="metric-name">{metric}:</span>
                                   <span className="metric-score">
-                                    {data.score ? data.score.toFixed(2) : 'N/A'}
-                                    {data.passing ? ' ✅' : ' ❌'}
+                                    {typeof data === 'object' && data !== null
+                                      ? `${data.score?.toFixed(2) || 'N/A'} ${data.passing ? '✅' : '❌'}`
+                                      : typeof data === 'number' 
+                                        ? data.toFixed(2)
+                                        : 'N/A'}
                                   </span>
-                                  {data.feedback && (
+                                  {typeof data === 'object' && data !== null && data.feedback && (
                                     <div className="metric-feedback">{data.feedback}</div>
                                   )}
                                 </div>
@@ -600,7 +600,6 @@ function App() {
                     </div>
                   ))}
                   
-                  {/* Panel de métricas de retrieval */}
                   {retrievalMetrics && !retrievalMetrics.error && (
                     <div className="retrieval-metrics-panel">
                       <h3>🔍 Calidad del Retrieval para tu Pregunta</h3>
@@ -667,7 +666,6 @@ function App() {
         </div>
       </div>
 
-      {/* Modales de confirmación */}
       {showModelChangeConfirm && (
         <div className="modal-overlay">
           <div className="modal">
