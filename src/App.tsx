@@ -578,7 +578,6 @@ function App() {
                                       {typeof data === 'object' && data !== null ? (
                                         <>
                                           <span>{data.score?.toFixed(3) || 'N/A'}</span>
-                                          {/* ✅ INDICADOR VISUAL BASADO EN SCORE, NO EN BOOLEAN */}
                                           <span style={{marginLeft: '8px'}}>
                                             {data.score !== undefined && (
                                               data.score >= 0.8 ? '🟢' : 
@@ -600,12 +599,14 @@ function App() {
                                     </div>
                                   </div>
                                   
-                                  {/* ✅ COLUMNA DERECHA: Feedback completo */}
+                                  {/* ✅ COLUMNA DERECHA: Feedback completo siempre visible */}
                                   <div className="metric-content">
                                     {typeof data === 'object' && data !== null && data.feedback && (
                                       <div className="metric-feedback">
                                         <strong>💬 Feedback del Juez:</strong><br />
-                                        {data.feedback}
+                                        <div className="feedback-text">
+                                          {data.feedback}
+                                        </div>
                                       </div>
                                     )}
                                   </div>
