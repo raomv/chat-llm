@@ -14,17 +14,24 @@ interface Message {
 
 interface RetrievalMetrics {
   query: string;
-  hit_rate: number;
-  mrr: number;
   retrieved_count: number;
-  interpretation?: {
-    hit_rate_status: string;
-    mrr_quality: string;
-  };
+  retrieval_time_ms: number;
+  score_at_1?: number;
+  mean_score?: number;
+  var_score?: number;
+  margin_at_1?: number;
+  accept_rate_at_threshold?: number;
+  threshold_used?: number;
+  qd_mean?: number;
+  qd_max?: number;
+  docdoc_coherence?: number;
+  diversity?: number;
+  unique_sources?: number;
   metadata?: {
     embedding_model: string;
     vector_store: string;
     evaluation_timestamp: number;
+    similarity_top_k: number;
   };
   error?: string;
 }
@@ -633,53 +640,81 @@ function App() {
                   
                   {retrievalMetrics && !retrievalMetrics.error && (
                     <div className="retrieval-metrics-panel">
-                      <h3>🔍 Calidad del Retrieval para tu Pregunta</h3>
+                      <h3>🔍 Métricas de Retrieval Label-Free</h3>
                       
                       <div className="query-display">
                         <strong>Tu pregunta:</strong> <span className="user-query">{retrievalMetrics.query}</span>
                       </div>
                       
+                      {/* Métricas básicas */}
                       <div className="retrieval-info">
                         <div className="info-item">
-                          <span>📄 Modelo de Embeddings:</span>
-                          <span>{retrievalMetrics.metadata?.embedding_model || 'FastEmbed'}</span>
-                        </div>
-                        <div className="info-item">
-                          <span>🗄️ Base de Datos:</span>
-                          <span>{retrievalMetrics.metadata?.vector_store || 'Qdrant'}</span>
-                        </div>
-                        <div className="info-item">
-                          <span>📄 Docs Recuperados:</span>
+                          <span>📄 Documentos:</span>
                           <span>{retrievalMetrics.retrieved_count}</span>
                         </div>
+                        <div className="info-item">
+                          <span>⏱️ Tiempo:</span>
+                          <span>{retrievalMetrics.retrieval_time_ms}ms</span>
+                        </div>
+                        <div className="info-item">
+                          <span>📚 Fuentes únicas:</span>
+                          <span>{retrievalMetrics.unique_sources}</span>
+                        </div>
                       </div>
                       
+                      {/* Métricas de scores */}
                       <div className="metrics-grid">
-                        <div className={`metric-card ${retrievalMetrics.interpretation?.hit_rate_status}`}>
-                          <div className="metric-name">Hit Rate</div>
-                          <div className="metric-value">{retrievalMetrics.hit_rate.toFixed(3)}</div>
-                          <div className="metric-description">
-                            {retrievalMetrics.hit_rate === 1.0 
-                              ? "✅ Se encontraron documentos relevantes" 
-                              : "⚠️ No se encontraron documentos suficientemente relevantes"}
-                          </div>
+                        <div className="metric-card">
+                          <div className="metric-name">Score@1</div>
+                          <div className="metric-value">{retrievalMetrics.score_at_1?.toFixed(4) || 'N/A'}</div>
+                          <div className="metric-description">Score del mejor resultado</div>
                         </div>
                         
-                        <div className={`metric-card ${retrievalMetrics.interpretation?.mrr_quality}`}>
-                          <div className="metric-name">MRR (Mean Reciprocal Rank)</div>
-                          <div className="metric-value">{retrievalMetrics.mrr.toFixed(3)}</div>
-                          <div className="metric-description">
-                            {retrievalMetrics.mrr > 0.8 ? "🎯 Excelente ranking" :
-                             retrievalMetrics.mrr > 0.5 ? "👍 Buen ranking" : "⚠️ Ranking mejorable"}
-                          </div>
+                        <div className="metric-card">
+                          <div className="metric-name">Mean Score</div>
+                          <div className="metric-value">{retrievalMetrics.mean_score?.toFixed(4) || 'N/A'}</div>
+                          <div className="metric-description">Promedio de similarity scores</div>
+                        </div>
+                        
+                        <div className="metric-card">
+                          <div className="metric-name">Accept Rate</div>
+                          <div className="metric-value">{((retrievalMetrics.accept_rate_at_threshold || 0) * 100).toFixed(1)}%</div>
+                          <div className="metric-description">% docs > {retrievalMetrics.threshold_used || 0.7}</div>
                         </div>
                       </div>
                       
+                      {/* Métricas de embeddings (si disponibles) */}
+                      {retrievalMetrics.qd_mean !== undefined && (
+                        <div className="embedding-metrics">
+                          <h4>🎯 Métricas de Embeddings</h4>
+                          <div className="metrics-grid">
+                            <div className="metric-card">
+                              <div className="metric-name">Query-Doc Mean</div>
+                              <div className="metric-value">{retrievalMetrics.qd_mean.toFixed(4)}</div>
+                              <div className="metric-description">Alineación semántica promedio</div>
+                            </div>
+                            
+                            <div className="metric-card">
+                              <div className="metric-name">Doc-Doc Coherence</div>
+                              <div className="metric-value">{retrievalMetrics.docdoc_coherence?.toFixed(4)}</div>
+                              <div className="metric-description">Coherencia entre documentos</div>
+                            </div>
+                            
+                            <div className="metric-card">
+                              <div className="metric-name">Diversity</div>
+                              <div className="metric-value">{retrievalMetrics.diversity?.toFixed(4)}</div>
+                              <div className="metric-description">Diversidad del conjunto</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="retrieval-explanation">
-                        <h4>📖 Interpretación de Métricas</h4>
+                        <h4>📖 Interpretación</h4>
                         <ul>
-                          <li><strong>Hit Rate:</strong> ¿Se encontraron documentos relevantes en los resultados?</li>
-                          <li><strong>MRR:</strong> ¿En qué posición aparece el primer documento relevante?</li>
+                          <li><strong>Score@1:</strong> Calidad del mejor resultado (más alto = mejor match)</li>
+                          <li><strong>Accept Rate:</strong> % de resultados con alta confianza</li>
+                          <li><strong>Diversity:</strong> Variedad temática (0.2-0.8 es ideal)</li>
                         </ul>
                       </div>
                     </div>
