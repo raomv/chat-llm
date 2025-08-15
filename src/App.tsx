@@ -679,7 +679,7 @@ function App() {
                         <div className="metric-card">
                           <div className="metric-name">Accept Rate</div>
                           <div className="metric-value">{((retrievalMetrics.accept_rate_at_threshold || 0) * 100).toFixed(1)}%</div>
-                          <div className="metric-description">% docs > {retrievalMetrics.threshold_used || 0.7}</div>
+                          <div className="metric-description">% docs &gt; {retrievalMetrics.threshold_used || 0.7}</div>
                         </div>
                       </div>
                       
