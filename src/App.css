@@ -1615,3 +1615,50 @@ input[type="file"]:hover {
     padding: 12px;
   }
 }
+
+/* Añadir al final del archivo: */
+.ragas-metrics {
+  background-color: #f8f0ff;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  border-left: 4px solid #6f42c1;
+}
+
+.ragas-metrics h4 {
+  margin: 0 0 15px 0;
+  color: #6f42c1;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.ragas-metrics .metrics-grid {
+  display: grid;
+  gap: 15px;
+}
+
+.ragas-metrics .metric-item {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e0d4f7;
+}
+
+.ragas-metrics .metric-name {
+  font-weight: 600;
+  color: #6f42c1;
+  margin-bottom: 5px;
+}
+
+.ragas-metrics .metric-score {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #2d3748;
+}
+
+.ragas-metrics .metric-feedback {
+  color: #4a5568;
+  font-size: 0.9em;
+  line-height: 1.4;
+  margin-top: 8px;
+}

@@ -36,6 +36,18 @@ interface RetrievalMetrics {
   error?: string;
 }
 
+// En la interface ModelMetrics:
+interface ModelMetrics {
+  faithfulness?: number;
+  relevancy?: number;
+  correctness?: number;
+  semantic_similarity?: number;
+  guideline?: number;
+  overall_score?: number;
+  ragas_context_precision?: number;  // NUEVO
+  ragas_context_recall?: number;     // NUEVO
+}
+
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -59,6 +71,7 @@ function App() {
   const [pendingCollection, setPendingCollection] = useState('');
   const [judgeModel, setJudgeModel] = useState<string>('');
   const [includeRetrievalMetrics, setIncludeRetrievalMetrics] = useState(false);
+  const [includeRagasMetrics, setIncludeRagasMetrics] = useState(false);  // NUEVO
   const [retrievalMetrics, setRetrievalMetrics] = useState<RetrievalMetrics | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -239,7 +252,8 @@ function App() {
         models: selectedModels,
         collection: currentCollection,
         judge_model: judgeModel,
-        include_retrieval_metrics: includeRetrievalMetrics
+        include_retrieval_metrics: includeRetrievalMetrics,
+        include_ragas_metrics: includeRagasMetrics,  // NUEVO PARÁMETRO
       });
       
       console.log("✅ Respuesta recibida:", response.data);
@@ -519,6 +533,21 @@ function App() {
                     Evalúa Hit Rate y MRR del sistema de búsqueda vectorial (FastEmbed + Qdrant)
                   </div>
                 </div>
+
+                <div className="model-option retrieval-option">
+                  <label className="retrieval-label">
+                    <input
+                      type="checkbox"
+                      checked={includeRagasMetrics}
+                      onChange={(e) => setIncludeRagasMetrics(e.target.checked)}
+                      className="retrieval-checkbox"
+                    />
+                    🎯 Evaluar con métricas RAGAS estándar
+                  </label>
+                  <div className="option-description">
+                    Métricas académicas estándar: Context Precision y Context Recall
+                  </div>
+                </div>
               </div>
               
               <div className="comparison-input">
@@ -549,7 +578,9 @@ function App() {
                   <p>🔍 Ejecutando evaluación académica...</p>
                   <p className="loading-details">
                     Esto puede tomar varios minutos. Evaluando {selectedModels.length} modelo(s) 
-                    con {includeRetrievalMetrics ? '6 métricas (incluye retrieval)' : '5 métricas'}
+                    con {includeRetrievalMetrics ? '8 métricas de retrieval + ' : ''}
+                    {includeRagasMetrics ? '2 métricas RAGAS + ' : ''}
+                    5 métricas base
                   </p>
                 </div>
               )}
@@ -624,6 +655,54 @@ function App() {
                             {metrics[model].overall_score !== undefined && (
                               <div className="overall-score">
                                 <strong>🎯 Puntuación General: {metrics[model].overall_score.toFixed(3)}</strong>
+                              </div>
+                            )}
+
+                            {/* Después del overall-score, añadir: */}
+                            {metrics[model].ragas_context_precision !== undefined && (
+                              <div className="ragas-metrics">
+                                <h4>🎯 Métricas RAGAS Estándar</h4>
+                                <div className="metrics-grid">
+                                  <div className="metric-item">
+                                    <div className="metric-left">
+                                      <div className="metric-name">Context Precision</div>
+                                      <div className="metric-score">
+                                        <span>{metrics[model].ragas_context_precision.toFixed(3)}</span>
+                                        <span style={{marginLeft: '8px'}}>
+                                          {metrics[model].ragas_context_precision >= 0.8 ? '🟢' : 
+                                          metrics[model].ragas_context_precision >= 0.6 ? '🟡' : 
+                                          metrics[model].ragas_context_precision >= 0.4 ? '🟠' : '🔴'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="metric-content">
+                                      <div className="metric-feedback">
+                                        <strong>📋 Descripción:</strong><br />
+                                        Proporción de documentos recuperados que son realmente útiles para responder la pregunta.
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="metric-item">
+                                    <div className="metric-left">
+                                      <div className="metric-name">Context Recall</div>
+                                      <div className="metric-score">
+                                        <span>{metrics[model].ragas_context_recall.toFixed(3)}</span>
+                                        <span style={{marginLeft: '8px'}}>
+                                          {metrics[model].ragas_context_recall >= 0.8 ? '🟢' : 
+                                          metrics[model].ragas_context_recall >= 0.6 ? '🟡' : 
+                                          metrics[model].ragas_context_recall >= 0.4 ? '🟠' : '🔴'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="metric-content">
+                                      <div className="metric-feedback">
+                                        <strong>📋 Descripción:</strong><br />
+                                        Qué tan completa es la información recuperada respecto a la respuesta ideal.
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
