@@ -44,10 +44,11 @@ interface ModelMetrics {
   semantic_similarity?: number;
   guideline?: number;
   overall_score?: number;
-  ragas_context_precision?: number;  // NUEVO
-  ragas_context_recall?: number;     // NUEVO
-  ragas_faithfulness?: number;
-  ragas_answer_relevancy?: number;
+  ragas_faithfulness?: number;     // ✅ MANTENER
+  ragas_context_recall?: number;   // ✅ MANTENER
+  // ✅ MÉTRICAS RAGAS DESACTIVADAS:
+  // ragas_context_precision?: number;  
+  // ragas_answer_relevancy?: number;
 }
 
 function App() {
