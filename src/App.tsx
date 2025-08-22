@@ -46,6 +46,8 @@ interface ModelMetrics {
   overall_score?: number;
   ragas_context_precision?: number;  // NUEVO
   ragas_context_recall?: number;     // NUEVO
+  ragas_faithfulness?: number;
+  ragas_answer_relevancy?: number;
 }
 
 function App() {
@@ -545,7 +547,7 @@ function App() {
                     🎯 Evaluar con métricas RAGAS estándar
                   </label>
                   <div className="option-description">
-                    Métricas académicas estándar: Context Precision y Context Recall
+                    Métricas académicas estándar: Context Precision, Context Recall, Faithfulness y Answer Relevancy
                   </div>
                 </div>
               </div>
@@ -579,7 +581,7 @@ function App() {
                   <p className="loading-details">
                     Esto puede tomar varios minutos. Evaluando {selectedModels.length} modelo(s) 
                     con {includeRetrievalMetrics ? '8 métricas de retrieval + ' : ''}
-                    {includeRagasMetrics ? '2 métricas RAGAS + ' : ''}
+                    {includeRagasMetrics ? '4 métricas RAGAS + ' : ''}
                     5 métricas base
                   </p>
                 </div>
@@ -603,8 +605,13 @@ function App() {
                         <div className="academic-metrics">
                           <h4>📊 Evaluación del Juez ({judgeModel})</h4>
                           <div className="metrics-grid">
+                            {/* ✅ SOLO MÉTRICAS NATIVAS DE LLAMAINDEX (SIN RAGAS) */}
                             {Object.entries(metrics[model])
-                              .filter(([key]) => key !== 'overall_score' && key !== 'error')
+                              .filter(([key]) => 
+                                key !== 'overall_score' && 
+                                key !== 'error' && 
+                                !key.startsWith('ragas_')  // ✅ EXCLUIR métricas RAGAS
+                              )
                               .map(([metric, data]: [string, any]) => (
                                 <div key={metric} className="metric-item">
                                   {/* ✅ COLUMNA IZQUIERDA: Nombre y puntuación */}
@@ -651,60 +658,55 @@ function App() {
                                 </div>
                               ))}
                             
-                            {/* ✅ OVERALL SCORE */}
+                            {/* ✅ OVERALL SCORE - Solo métricas nativas */}
                             {metrics[model].overall_score !== undefined && (
                               <div className="overall-score">
                                 <strong>🎯 Puntuación General: {metrics[model].overall_score.toFixed(3)}</strong>
                               </div>
                             )}
+                          </div>
+                        </div>
+                      )}
 
-                            {/* Después del overall-score, añadir: */}
-                            {metrics[model].ragas_context_precision !== undefined && (
-                              <div className="ragas-metrics">
-                                <h4>🎯 Métricas RAGAS Estándar</h4>
-                                <div className="metrics-grid">
-                                  <div className="metric-item">
+                      {/* ✅ SECCIÓN SEPARADA SOLO PARA MÉTRICAS RAGAS */}
+                      {Object.keys(metrics[model] || {}).some(key => key.startsWith('ragas_')) && (
+                        <div className="ragas-metrics">
+                          <h4>🎯 Métricas RAGAS Estándar</h4>
+                          <div className="metrics-grid">
+                            {Object.entries(metrics[model])
+                              .filter(([key]) => key.startsWith('ragas_'))  // ✅ SOLO métricas RAGAS
+                              .map(([metric, value]: [string, any]) => {
+                                // Extraer nombre limpio de la métrica
+                                const cleanName = metric.replace('ragas_', '').replace('_', ' ');
+                                const score = typeof value === 'number' ? value : 0;
+                                
+                                return (
+                                  <div key={metric} className="metric-item">
                                     <div className="metric-left">
-                                      <div className="metric-name">Context Precision</div>
+                                      <div className="metric-name">{cleanName}</div>
                                       <div className="metric-score">
-                                        <span>{metrics[model].ragas_context_precision.toFixed(3)}</span>
+                                        <span>{score.toFixed(3)}</span>
                                         <span style={{marginLeft: '8px'}}>
-                                          {metrics[model].ragas_context_precision >= 0.8 ? '🟢' : 
-                                          metrics[model].ragas_context_precision >= 0.6 ? '🟡' : 
-                                          metrics[model].ragas_context_precision >= 0.4 ? '🟠' : '🔴'}
+                                          {score >= 0.8 ? '🟢' : score >= 0.6 ? '🟡' : score >= 0.4 ? '🟠' : '🔴'}
                                         </span>
                                       </div>
                                     </div>
                                     <div className="metric-content">
                                       <div className="metric-feedback">
                                         <strong>📋 Descripción:</strong><br />
-                                        Proporción de documentos recuperados que son realmente útiles para responder la pregunta.
+                                        {metric === 'ragas_context_precision' && 
+                                          'Proporción de documentos recuperados que son realmente útiles para responder la pregunta.'}
+                                        {metric === 'ragas_context_recall' && 
+                                          'Qué tan completa es la información recuperada respecto a la respuesta ideal.'}
+                                        {metric === 'ragas_faithfulness' && 
+                                          'Qué tan fiel es la respuesta a la información proporcionada en el contexto.'}
+                                        {metric === 'ragas_answer_relevancy' && 
+                                          'Qué tan relevante es la respuesta generada para la pregunta formulada.'}
                                       </div>
                                     </div>
                                   </div>
-                                  
-                                  <div className="metric-item">
-                                    <div className="metric-left">
-                                      <div className="metric-name">Context Recall</div>
-                                      <div className="metric-score">
-                                        <span>{metrics[model].ragas_context_recall.toFixed(3)}</span>
-                                        <span style={{marginLeft: '8px'}}>
-                                          {metrics[model].ragas_context_recall >= 0.8 ? '🟢' : 
-                                          metrics[model].ragas_context_recall >= 0.6 ? '🟡' : 
-                                          metrics[model].ragas_context_recall >= 0.4 ? '🟠' : '🔴'}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="metric-content">
-                                      <div className="metric-feedback">
-                                        <strong>📋 Descripción:</strong><br />
-                                        Qué tan completa es la información recuperada respecto a la respuesta ideal.
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+                                );
+                              })}
                           </div>
                         </div>
                       )}
