@@ -246,8 +246,8 @@ function App() {
     setMetrics(null);
     setRetrievalMetrics(null);
     
-    console.log("📊 Iniciando comparación de modelos...");
-    console.log("🔍 Incluir métricas de retrieval:", includeRetrievalMetrics);
+    console.log("Iniciando comparación de modelos...");
+    console.log("Incluir métricas de retrieval:", includeRetrievalMetrics);
     
     try {
       const response = await axios.post(`${API_URL}/compare-models`, {
@@ -259,14 +259,14 @@ function App() {
         include_ragas_metrics: includeRagasMetrics,  // NUEVO PARÁMETRO
       });
       
-      console.log("✅ Respuesta recibida:", response.data);
+      console.log("Respuesta recibida:", response.data);
       
       setComparisonResults(response.data.results);
       setMetrics(response.data.metrics);
       setRetrievalMetrics(response.data.retrieval_metrics);
       
       if (response.data.retrieval_metrics) {
-        console.log("📊 Métricas de retrieval recibidas:", response.data.retrieval_metrics);
+        console.log("Métricas de retrieval recibidas:", response.data.retrieval_metrics);
       }
       
     } catch (error: any) {
@@ -507,7 +507,7 @@ function App() {
                     onChange={(e) => setJudgeModel(e.target.value)}
                     className="judge-selector"
                   >
-                    <option value="">Seleccionar modelo juez...</option>
+                    <option value="">Seleccionar modelo juez</option>
                     {models
                       .filter(model => !selectedModels.includes(model))
                       .map(model => (
@@ -517,7 +517,7 @@ function App() {
                   </select>
                   {judgeModel && (
                     <p className="judge-info">
-                      🏅 Juez seleccionado: <strong>{judgeModel}</strong>
+                      Juez seleccionado: <strong>{judgeModel}</strong>
                     </p>
                   )}
                 </div>
@@ -530,10 +530,11 @@ function App() {
                       onChange={(e) => setIncludeRetrievalMetrics(e.target.checked)}
                       className="retrieval-checkbox"
                     />
-                    📊 Evaluar calidad del retrieval para esta pregunta
+                    Evaluar calidad del retrieval para esta pregunta
                   </label>
                   <div className="option-description">
-                    Evalúa Hit Rate y MRR del sistema de búsqueda vectorial (FastEmbed + Qdrant)
+                    Métricas de retrieval detalladas con LlamaIndex
+                    {/* Evalúa Hit Rate y MRR del sistema de búsqueda vectorial (FastEmbed + Qdrant) */}
                   </div>
                 </div>
 
@@ -545,10 +546,11 @@ function App() {
                       onChange={(e) => setIncludeRagasMetrics(e.target.checked)}
                       className="retrieval-checkbox"
                     />
-                    🎯 Evaluar con métricas RAGAS estándar
+                    Evaluar con métricas RAGAS estándar
                   </label>
                   <div className="option-description">
-                    Métricas académicas estándar: Context Precision, Context Recall, Faithfulness y Answer Relevancy
+                    Métricas RAGAS: Faithfulness y Context Recall
+                    {/* Métricas académicas estándar: Context Precision, Context Recall, Faithfulness y Answer Relevancy */}
                   </div>
                 </div>
               </div>
@@ -571,18 +573,18 @@ function App() {
                     !judgeModel
                   }
                 >
-                  {isComparing ? "Evaluando..." : "Obtener evaluación académica"}
+                  {isComparing ? "Evaluando..." : "Evaluar"}
                 </button>
               </div>
               
               {isComparing && (
                 <div className="comparison-loading">
                   <div className="loading-spinner"></div>
-                  <p>🔍 Ejecutando evaluación académica...</p>
+                  <p>Ejecutando evaluación...</p>
                   <p className="loading-details">
                     Esto puede tomar varios minutos. Evaluando {selectedModels.length} modelo(s) 
-                    con {includeRetrievalMetrics ? '8 métricas de retrieval + ' : ''}
-                    {includeRagasMetrics ? '4 métricas RAGAS + ' : ''}
+                    con {includeRetrievalMetrics ? '7 métricas de retrieval LlamaIndex + ' : ''}
+                    {includeRagasMetrics ? '2 métricas RAGAS + ' : ''}
                     5 métricas base
                   </p>
                 </div>
@@ -590,21 +592,21 @@ function App() {
               
               {!isComparing && comparisonResults && (
                 <div className="comparison-panel">
-                  <h3>📊 Evaluación Académica con LlamaIndex</h3>
+                  <h3>Evaluación Académica con LlamaIndex</h3>
                   
                   <div className="judge-info-panel">
-                    <h4>🏅 Modelo Juez: {judgeModel}</h4>
+                    <h4>Modelo Juez: {judgeModel}</h4>
                     <p>El modelo juez evalúa las respuestas usando métricas académicas estándar</p>
                   </div>
                   
                   {Object.entries(comparisonResults).map(([model, response]) => (
                     <div key={model} className="model-comparison">
-                      <h3>🤖 Modelo: {model}</h3>
+                      <h3>Modelo: {model}</h3>
                       <div className="model-response">{response as string}</div>
                       
                       {metrics && metrics[model] && !metrics[model].error && (
                         <div className="academic-metrics">
-                          <h4>📊 Evaluación del Juez ({judgeModel})</h4>
+                          <h4>Evaluación del Juez ({judgeModel})</h4>
                           <div className="metrics-grid">
                             {/* ✅ SOLO MÉTRICAS NATIVAS DE LLAMAINDEX (SIN RAGAS) */}
                             {Object.entries(metrics[model])
@@ -649,7 +651,7 @@ function App() {
                                   <div className="metric-content">
                                     {typeof data === 'object' && data !== null && data.feedback && (
                                       <div className="metric-feedback">
-                                        <strong>💬 Feedback del Juez:</strong><br />
+                                        <strong>Feedback del Juez:</strong><br />
                                         <div className="feedback-text">
                                           {data.feedback}
                                         </div>
@@ -662,7 +664,7 @@ function App() {
                             {/* ✅ OVERALL SCORE - Solo métricas nativas */}
                             {metrics[model].overall_score !== undefined && (
                               <div className="overall-score">
-                                <strong>🎯 Puntuación General: {metrics[model].overall_score.toFixed(3)}</strong>
+                                <strong>Puntuación total: {metrics[model].overall_score.toFixed(3)}</strong>
                               </div>
                             )}
                           </div>
@@ -672,7 +674,7 @@ function App() {
                       {/* ✅ SECCIÓN SEPARADA SOLO PARA MÉTRICAS RAGAS */}
                       {Object.keys(metrics[model] || {}).some(key => key.startsWith('ragas_')) && (
                         <div className="ragas-metrics">
-                          <h4>🎯 Métricas RAGAS Estándar</h4>
+                          <h4>Métricas RAGAS Estándar</h4>
                           <div className="metrics-grid">
                             {Object.entries(metrics[model])
                               .filter(([key]) => key.startsWith('ragas_'))  // ✅ SOLO métricas RAGAS
@@ -692,19 +694,6 @@ function App() {
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="metric-content">
-                                      <div className="metric-feedback">
-                                        <strong>📋 Descripción:</strong><br />
-                                        {metric === 'ragas_context_precision' && 
-                                          'Proporción de documentos recuperados que son realmente útiles para responder la pregunta.'}
-                                        {metric === 'ragas_context_recall' && 
-                                          'Qué tan completa es la información recuperada respecto a la respuesta ideal.'}
-                                        {metric === 'ragas_faithfulness' && 
-                                          'Qué tan fiel es la respuesta a la información proporcionada en el contexto.'}
-                                        {metric === 'ragas_answer_relevancy' && 
-                                          'Qué tan relevante es la respuesta generada para la pregunta formulada.'}
-                                      </div>
-                                    </div>
                                   </div>
                                 );
                               })}
@@ -722,7 +711,7 @@ function App() {
                   
                   {retrievalMetrics && !retrievalMetrics.error && (
                     <div className="retrieval-metrics-panel">
-                      <h3>🔍 Métricas de Retrieval Label-Free</h3>
+                      <h3>Métricas de Retrieval con LlamaIndex</h3>
                       
                       <div className="query-display">
                         <strong>Tu pregunta:</strong> <span className="user-query">{retrievalMetrics.query}</span>
@@ -791,20 +780,20 @@ function App() {
                         </div>
                       )}
                       
-                      <div className="retrieval-explanation">
+                      {/* <div className="retrieval-explanation">
                         <h4>📖 Interpretación</h4>
                         <ul>
                           <li><strong>Score@1:</strong> Calidad del mejor resultado (más alto = mejor match)</li>
                           <li><strong>Accept Rate:</strong> % de resultados con alta confianza</li>
                           <li><strong>Diversity:</strong> Variedad temática (0.2-0.8 es ideal)</li>
                         </ul>
-                      </div>
+                      </div> */}
                     </div>
                   )}
 
                   {retrievalMetrics?.error && (
                     <div className="retrieval-error">
-                      ❌ Error evaluando métricas de retrieval: {retrievalMetrics.error}
+                      Error evaluando métricas de retrieval: {retrievalMetrics.error}
                     </div>
                   )}
                 </div>
