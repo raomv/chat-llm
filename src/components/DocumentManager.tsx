@@ -6,15 +6,13 @@ const API_URL = 'http://localhost:8000';
 
 function DocumentManager() {
   const [newCollectionName, setNewCollectionName] = useState('');
-  const [directory, setDirectory] = useState('');
   const [chunkSize, setChunkSize] = useState(1024);
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('');
   const [collections, setCollections] = useState<string[]>([]);
   
-  // Nuevos estados para upload
-  const [uploadMode, setUploadMode] = useState<'directory' | 'upload'>('upload');
+  // Estados para la subida de archivos
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
 
   // Cargar colecciones disponibles al montar el componente
@@ -49,29 +47,6 @@ function DocumentManager() {
     } catch (error: any) {
       console.error('Error al crear colección:', error);
       setMessage(`Error: ${error.response?.data?.detail || 'No se pudo crear la colección'}`);
-    }
-  };
-
-  // Procesar documentos desde directorio
-  const handleProcessDocuments = async () => {
-    if (!directory.trim() || !selectedCollection) return;
-    
-    setIsProcessing(true);
-    setMessage('Procesando documentos...');
-    
-    try {
-      const response = await axios.post(`${API_URL}/api/documents/process`, {
-        directory: directory,
-        chunk_size: chunkSize,
-        collection: selectedCollection
-      });
-      
-      setMessage(`Procesamiento iniciado: ${response.data.message}`);
-    } catch (error: any) {
-      console.error('Error al procesar documentos:', error);
-      setMessage(`Error: ${error.response?.data?.detail || 'No se pudieron procesar los documentos'}`);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -127,65 +102,29 @@ function DocumentManager() {
       <h2>Gestión de Documentos</h2>
       
       <div className="section">
-        <h3>Modo de Procesamiento</h3>
-        <div className="mode-selector">
-          <label>
-            <input
-              type="radio"
-              value="upload"
-              checked={uploadMode === 'upload'}
-              onChange={(e) => setUploadMode(e.target.value as 'directory' | 'upload')}
-            />
-            Subir Archivos
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="directory"
-              checked={uploadMode === 'directory'}
-              onChange={(e) => setUploadMode(e.target.value as 'directory' | 'upload')}
-            />
-            Usar Directorio
-          </label>
-        </div>
-      </div>
-      
-      <div className="section">
         <h3>Procesar Documentos</h3>
         <div className="process-form">
           
-          {uploadMode === 'upload' ? (
-            <div className="form-group">
-              <label>Seleccionar archivos:</label>
-              <input
-                id="file-input"
-                type="file"
-                multiple
-                accept=".pdf,.txt,.docx,.md"
-                onChange={(e) => setSelectedFiles(e.target.files)}
-              />
-              {selectedFiles && (
-                <div className="selected-files">
-                  <p>Archivos seleccionados: {selectedFiles.length}</p>
-                  <ul>
-                    {Array.from(selectedFiles).map((file, index) => (
-                      <li key={index}>{file.name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="form-group">
-              <label>Directorio de documentos:</label>
-              <input
-                type="text"
-                value={directory}
-                onChange={(e) => setDirectory(e.target.value)}
-                placeholder="/ruta/a/documentos"
-              />
-            </div>
-          )}
+          <div className="form-group">
+            <label>Seleccionar archivos:</label>
+            <input
+              id="file-input"
+              type="file"
+              multiple
+              accept=".pdf,.txt,.docx,.md"
+              onChange={(e) => setSelectedFiles(e.target.files)}
+            />
+            {selectedFiles && (
+              <div className="selected-files">
+                <p>Archivos seleccionados: {selectedFiles.length}</p>
+                <ul>
+                  {Array.from(selectedFiles).map((file, index) => (
+                    <li key={index}>{file.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
           
           <div className="form-group">
             <label>Tamaño de fragmento:</label>
@@ -226,15 +165,14 @@ function DocumentManager() {
           </div>
           
           <button 
-            onClick={uploadMode === 'upload' ? handleUploadDocuments : handleProcessDocuments}
+            onClick={handleUploadDocuments}
             disabled={
               isProcessing || 
               !selectedCollection || 
-              (uploadMode === 'upload' ? !selectedFiles || selectedFiles.length === 0 : !directory)
+              !selectedFiles || selectedFiles.length === 0
             }
           >
-            {isProcessing ? 'Procesando...' : 
-             uploadMode === 'upload' ? 'Subir y Procesar' : 'Procesar Documentos'}
+            {isProcessing ? 'Procesando...' : 'Subir y Procesar'}
           </button>
         </div>
       </div>
