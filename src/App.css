@@ -124,21 +124,48 @@ body {
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+  
+  /* ✅ ESTAS SON LAS LÍNEAS CLAVE PARA SOLUCIONAR EL PROBLEMA */
+  max-height: none !important;
+  height: auto !important;
+  
+  /* Permitir scroll en el dropdown cuando se abre */
+  overflow-y: auto;
+  
+  /* Configurar la altura del dropdown cuando está abierto */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
-.collection-selector select:hover {
-  border-color: var(--primary-color);
-}
-
+/* ✅ CUANDO EL SELECT ESTÁ ENFOCADO (abierto) */
 .collection-selector select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+  
+  /* ✅ ALTURA ESPECÍFICA PARA MOSTRAR MÁS OPCIONES */
+  max-height: 200px !important;
+  min-height: 120px !important;
 }
 
-.collection-selector select:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.collection-selector option {
+  padding: 10px 12px !important;
+  background-color: var(--chat-bg) !important;
+  color: var(--text-color) !important;
+  border: none !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  min-height: 40px !important;
+}
+
+.collection-selector option:hover {
+  background-color: var(--model-checkbox-hover) !important;
+}
+
+.collection-selector option:checked {
+  background-color: var(--primary-color) !important;
+  color: white !important;
 }
 
 .model-selector {
@@ -155,21 +182,103 @@ body {
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+  
+  /* ✅ ESTAS SON LAS LÍNEAS CLAVE PARA SOLUCIONAR EL PROBLEMA */
+  max-height: none !important;
+  height: auto !important;
+  
+  /* Permitir scroll en el dropdown cuando se abre */
+  overflow-y: auto;
+  
+  /* Configurar la altura del dropdown cuando está abierto */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
-.model-selector select:hover {
-  border-color: var(--primary-color);
-}
-
+/* ✅ CUANDO EL SELECT ESTÁ ENFOCADO (abierto) */
 .model-selector select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+  
+  /* ✅ ALTURA ESPECÍFICA PARA MOSTRAR MÁS OPCIONES */
+  max-height: 200px !important;
+  min-height: 120px !important;
 }
 
-.model-selector select:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.model-selector option {
+  padding: 10px 12px !important;
+  background-color: var(--chat-bg) !important;
+  color: var(--text-color) !important;
+  border: none !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  min-height: 40px !important;
+}
+
+.model-selector option:hover {
+  background-color: var(--model-checkbox-hover) !important;
+}
+
+.model-selector option:checked {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+/* ✅ TEMA OSCURO */
+.dark-theme .collection-selector option,
+.dark-theme .model-selector option {
+  background-color: var(--chat-bg) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-theme .collection-selector option:hover,
+.dark-theme .model-selector option:hover {
+  background-color: var(--model-checkbox-hover) !important;
+}
+
+/* ✅ RESPONSIVE - mejor en móviles */
+@media (max-width: 768px) {
+  .collection-selector select:focus,
+  .model-selector select:focus {
+    max-height: 150px !important;
+    font-size: 16px !important; /* Evitar zoom en iOS */
+  }
+}
+
+/* ✅ FORZAR QUE SE MUESTREN TODAS LAS OPCIONES EN NAVEGADORES ESPECÍFICOS */
+.collection-selector select[size],
+.model-selector select[size] {
+  height: auto !important;
+  max-height: 200px !important;
+  min-height: 120px !important;
+}
+
+/* ✅ WEBKIT ESPECÍFICO (Chrome, Safari) */
+@supports (-webkit-appearance: none) {
+  .collection-selector select,
+  .model-selector select {
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 35px;
+  }
+}
+
+/* ✅ FIREFOX ESPECÍFICO */
+@-moz-document url-prefix() {
+  .collection-selector select,
+  .model-selector select {
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 35px;
+  }
 }
 
 /* Estilos para el modal de confirmación */
